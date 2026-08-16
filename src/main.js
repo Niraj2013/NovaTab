@@ -178,4 +178,84 @@ function makeDraggable(element){
     element.style.left = `${left}px`;
     element.style.top = `${top}px`;
   });
+  
+  bar.addEventListener("pointerup", () => {
+    dragging = false;
+    saveLayout();
+  });
+
+  element.addEventListener("pointerdown", () => {
+    highestZIndex += 1;
+    element.style.zIndex = highestZIndex;
+  });
 }
+
+function saveLayout(){
+  const layout = {};
+
+  document.querySelectorAll(".nova-window").forEach((window) => {
+    const widget = window.dataset.widget;
+
+    layout[widget] = {
+      left: window.style.left,
+      top: window.style.top,
+      zIndex: window.style.zIndex,
+      hidden: window.classList.contains("hidden")
+    };
+  });
+
+  localStorage.setItem("novatab-layout", JSON.stringify(layout));
+}
+
+function loadLayout(){
+  const saved = localStorage.getItem("novatab-layout");
+
+  if(!saved) return;
+
+  try {
+    const layout = JSON.parse(saved);
+
+    document.querySelectorAll(".nova-window").forEach((window) => {
+      const widget = window.dataset.widget;
+      const savedWindow = layout[widget];
+
+      if(!savedWindow) return;
+
+      if(savedWindow.left) {
+        window.style.left = savedWindow.left;
+      }
+
+      if(savedWindow.top) {
+        window.style.top = savedWindow.top;
+      }
+
+      if(savedWindow.zIndex) {
+        window.style.zIndex = savedWindow.zIndex;
+      }
+
+      if(savedWindow.hidden) {
+        window.classList.add("hidden");
+      }
+    });
+  } catch (error) {
+    console.log("Could not load NovaTab layout.", error);
+  }
+}
+
+function setupCloseButons() {
+  document.querySelectorAll(".close-widget").forEach((button) => {
+    button.addEventListener("click",  () => {
+      const window = button.closest(".nova-window");
+
+      if(!windwo) return;
+
+      window.classList.add("hidden");
+      saveLayout();
+    });
+  });
+}
+
+const weatherForm = document.querySelector("#weatherForm");
+const cityInput = document.querySelector("#cityInput");
+const weatherStatus = document.querySelector("#weatherStatus");
+const weatherResult = document.querySelector("#weatherResult");
