@@ -404,4 +404,34 @@ function createWidget(type) {
       </section>
     `
   };
+
+  if(!templates[type]) return;
+
+  workspace.insertAdjacentHTML("beforeend", templates[type]);
+
+  cosnt newWidget = workspace.querySelector(
+    `.nova-window[data-widget="${type}"]:last-child`
+  );
+
+  newWidget.style.left = `${80 + Math.random() * 200}px`;
+  newWidget.style.top = `${100 + Math.random() * 150}px`;
+
+  highestZIndex += 1;
+  newWidget.style.zIndex = highestZIndex;
+
+  makeDraggable(newWidget);
+  setupCloseButons();
+  saveLayout();
 }
+
+resetBtn.add("click", () => {
+  localStorage.removeItem("novatab-layout");
+  location.reload();
+});
+
+document.querySelectorAll(".nova-window").forEach((window) => {
+  makeDraggable(window);
+});
+
+setupCloseButons();
+loadLayout();
