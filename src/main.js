@@ -409,7 +409,7 @@ function createWidget(type) {
 
   workspace.insertAdjacentHTML("beforeend", templates[type]);
 
-  cosnt newWidget = workspace.querySelector(
+  const newWidget = workspace.querySelector(
     `.nova-window[data-widget="${type}"]:last-child`
   );
 
