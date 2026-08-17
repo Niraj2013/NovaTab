@@ -259,3 +259,149 @@ const weatherForm = document.querySelector("#weatherForm");
 const cityInput = document.querySelector("#cityInput");
 const weatherStatus = document.querySelector("#weatherStatus");
 const weatherResult = document.querySelector("#weatherResult");
+
+weatherForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const city = cityInput.ariaValueMax.trim();
+
+  if(!city) {
+    weatherStatus.textContent = "Please Enter a city";
+    return;
+  }
+
+  weatherStatus.textContent = "Looking up the Weather...";
+  weatherResult.innerHTML = "";
+
+  try {
+    const locationResponse = await fetch(
+       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+    );
+
+    if (!locationResponse.ok) {
+      throw new Error("Could not find that city.");
+    }
+
+    const locaationData = await locationResponse.json();
+
+    if(!locaationData.results || locaationData.results.length === 0){
+      throw new Error("City not found.");
+    }
+
+    const location = locaationData.results[0];
+
+    const weatherResponse = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+    );
+
+    if(!weatherResponse.ok){
+      throw new Error("Weatheer service is unavailable.");
+    }
+
+    const weatherData = await weatherResponse.json();
+
+    const current = weatherData.current;
+
+    weatherStatus.textContent =
+   `${location.name}, ${location.country}`;
+
+   weatherResult.innerHTML = `
+   <div class="weather-main">
+   <strong>${Math.round(current.temprature_2m)}°C</strong>
+   </div>
+
+   <p>Humidity: ${current.relative_humidity_2m}%</p>
+   <p>Wind: ${Math.round(current.wind_speed_10m)} km/h</p>
+   `;
+  } catch (error) {
+    weatherStatus.textContent = error.message;
+  }
+});
+
+addWidgetBtn.addEventListener("click", () => {
+  widgetMenu.classList.remove("hidden");
+});
+
+closeMenu.addEventListener("click", () => {
+  widgetMenu.classList.add("hidden");
+});
+
+widgetMenu.addEventListener("click", (event) => {
+  const button = event.target.closest(".widget-option");
+
+  if(!button) return;
+
+  const widgetType = button.dataset.add;
+
+  const existing = document.querySelector(
+    `.nova-window[data-widget="${widgetType}"]`
+  );
+
+  if(existing) {
+    existing.classList.remove("hidden");
+    widgetMenu.classList.add("hidden");
+    saveLayout();
+    return;
+  }
+
+  createWidget(widgetType);
+
+  widgetMenu.classList.add("hidden");
+});
+
+function createWidget(type) {
+  const templates = {
+    clock:`
+    <section class="nova-window" data-widget="clock">
+      <div class="window-bar">
+        <span class="windwo-title">Clock</span>
+        <button class="close-widget">x</button>
+      </div>
+
+      <div class="window-content">
+        <div id="clockTime">00:00</div>
+        <div id="clockDate">Loading date...</div>
+      </div>
+    </section>
+    `,
+    weather: `
+    <section class="nova-window" data-widget="weather">
+      <div class="window-bar">
+        <span class="window-title">Weather</span>
+        <button class="close-widget">x</button>
+      </div>
+
+      <div class="window-content">
+        <p>Weather widget</p>
+      </div>
+    </section>
+    `,
+
+    notes: `
+    <section class="nova-window" data-widget="notes">
+      <div class="window-bar">
+        <span class="window-title">Little Notes</span>
+        <button class="close-widget">x</button>
+      </div>
+
+      <div class="window-content">
+        <textarea placeholder="Write something here..."></textarea>
+      </div>
+    </section>
+    `,
+
+     welcome: `
+      <section class="nova-window" data-widget="welcome">
+        <div class="window-bar">
+          <span class="window-title">Welcome</span>
+          <button class="close-widget">×</button>
+        </div>
+
+        <div class="window-content">
+          <h2>Make this tab yours.</h2>
+          <p>Drag me anywhere.</p>
+        </div>
+      </section>
+    `
+  };
+}
