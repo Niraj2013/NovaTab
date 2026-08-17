@@ -20,7 +20,7 @@ app.innerHTML = `
     <section class="nova-window clock-window" data-widget="clock">
       <div class="window-bar">
         <span class="window-title">Clock</span>
-        <button class="close-widget" aria-label="Close clock">x</button>
+        <button class="close-widget" aria-label="Close clock">×</button>
       </div>
 
       <div class="window-content">
@@ -32,7 +32,7 @@ app.innerHTML = `
     <section class="nova-window weather-window" data-widget="weather">
       <div class="window-bar">
         <span class="window-title">Weather</span>
-        <button class="close-widget" aria-label="Close Weather">x</button>
+        <button class="close-widget" aria-label="Close Weather">×</button>
       </div>
 
       <div class="window-content">
@@ -44,8 +44,8 @@ app.innerHTML = `
             type="text"
             placeholder="Enter your city"
             autocomplete="off"
-            />
-            <button type="submit">Check</button>
+          />
+          <button type="submit">Check</button>
         </form>
 
         <div id="weatherResult"></div>
@@ -54,22 +54,19 @@ app.innerHTML = `
 
     <section class="nova-window notes-window" data-widget="notes">
       <div class="window-bar">
-        <span clas="window-title">Little Notes</span>
-        <button class="close-widget" aria-label="Close notes">x</button>
+        <span class="window-title">Little Notes</span>
+        <button class="close-widget" aria-label="Close notes">×</button>
       </div>
 
       <div class="window-content">
-        <textarea
-        id="notes"
-        placeholder="Write something here..."
-        ></textarea>
+        <textarea id="notes" placeholder="Write something here..."></textarea>
       </div>
     </section>
 
     <section class="nova-window welcome-window" data-widget="welcome">
       <div class="window-bar">
         <span class="window-title">Welcome</span>
-        <button class="close-widget" aria-label="Close welcome">x</button>
+        <button class="close-widget" aria-label="Close welcome">×</button>
       </div>
 
       <div class="window-content">
@@ -86,24 +83,13 @@ app.innerHTML = `
     <div class="widget-menu-card">
       <div class="menu-heading">
         <h2>Add something</h2>
-        <button id="closeMenu">x</button>
+        <button id="closeMenu">×</button>
       </div>
 
-      <button class="widget-option" data-add="clock">
-        Clock
-      </button>
-
-      <button class="widget-option" data-add="weather">
-        Weather
-      </button>
-
-      <button class="widget-option" data-add="notes">
-        Notes
-      </button>
-
-      <button class="widget-option" data-add="welcome">
-        Welcome card
-      </button>
+      <button class="widget-option" data-add="clock">Clock</button>
+      <button class="widget-option" data-add="weather">Weather</button>
+      <button class="widget-option" data-add="notes">Notes</button>
+      <button class="widget-option" data-add="welcome">Welcome card</button>
     </div>
   </div>
 `;
@@ -114,7 +100,9 @@ const widgetMenu = document.querySelector("#widgetMenu");
 const closeMenu = document.querySelector("#closeMenu");
 const resetBtn = document.querySelector("#resetBtn");
 
-function updateClock(){
+let highestZIndex = 10;
+
+function updateClock() {
   const now = new Date();
 
   const time = now.toLocaleTimeString([], {
@@ -131,46 +119,53 @@ function updateClock(){
   const clockTime = document.querySelector("#clockTime");
   const clockDate = document.querySelector("#clockDate");
 
-  if (clockTime) clockTime.textContent = time;
-  if (clockDate) clockDate.textContent = date;
+  if (clockTime) {
+    clockTime.textContent = time;
+  }
+
+  if (clockDate) {
+    clockDate.textContent = date;
+  }
 }
 
-updateClock();
-setInterval(updateClock, 1000);
-
-let highestZIndex = 10;
-
-function makeDraggable(element){
+function makeDraggable(element) {
   const bar = element.querySelector(".window-bar");
 
-  if (!bar) return;
+  if (!bar) {
+    return;
+  }
+
   let dragging = false;
   let offsetX = 0;
-  let offSetY = 0;
+  let offsetY = 0;
 
   bar.addEventListener("pointerdown", (event) => {
-    if (event.target.closest("button")) return;
+    if (event.target.closest("button")) {
+      return;
+    }
 
     dragging = true;
 
     highestZIndex += 1;
-    element.style.ZIndex = highestZIndex;
+    element.style.zIndex = highestZIndex;
 
     const rect = element.getBoundingClientRect();
 
-    offSetX = event.clientX - rect.left;
-    offSetY = event.clientY - rect.top;
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
 
     bar.setPointerCapture(event.pointerId);
   });
 
   bar.addEventListener("pointermove", (event) => {
-    if (!dragging) return;
+    if (!dragging) {
+      return;
+    }
 
     const workspaceRect = workspace.getBoundingClientRect();
 
     let left = event.clientX - workspaceRect.left - offsetX;
-    let top = event.clientY - workspaceRect.top - offSetY;
+    let top = event.clientY - workspaceRect.top - offsetY;
 
     left = Math.max(0, left);
     top = Math.max(0, top);
@@ -178,10 +173,14 @@ function makeDraggable(element){
     element.style.left = `${left}px`;
     element.style.top = `${top}px`;
   });
-  
+
   bar.addEventListener("pointerup", () => {
     dragging = false;
     saveLayout();
+  });
+
+  bar.addEventListener("pointercancel", () => {
+    dragging = false;
   });
 
   element.addEventListener("pointerdown", () => {
@@ -190,133 +189,142 @@ function makeDraggable(element){
   });
 }
 
-function saveLayout(){
+function saveLayout() {
   const layout = {};
 
-  document.querySelectorAll(".nova-window").forEach((window) => {
-    const widget = window.dataset.widget;
+  document.querySelectorAll(".nova-window").forEach((windowElement) => {
+    const widget = windowElement.dataset.widget;
 
     layout[widget] = {
-      left: window.style.left,
-      top: window.style.top,
-      zIndex: window.style.zIndex,
-      hidden: window.classList.contains("hidden")
+      left: windowElement.style.left,
+      top: windowElement.style.top,
+      zIndex: windowElement.style.zIndex,
+      hidden: windowElement.classList.contains("hidden")
     };
   });
 
   localStorage.setItem("novatab-layout", JSON.stringify(layout));
 }
 
-function loadLayout(){
+function loadLayout() {
   const saved = localStorage.getItem("novatab-layout");
 
-  if(!saved) return;
+  if (!saved) {
+    return;
+  }
 
   try {
     const layout = JSON.parse(saved);
 
-    document.querySelectorAll(".nova-window").forEach((window) => {
-      const widget = window.dataset.widget;
+    document.querySelectorAll(".nova-window").forEach((windowElement) => {
+      const widget = windowElement.dataset.widget;
       const savedWindow = layout[widget];
 
-      if(!savedWindow) return;
-
-      if(savedWindow.left) {
-        window.style.left = savedWindow.left;
+      if (!savedWindow) {
+        return;
       }
 
-      if(savedWindow.top) {
-        window.style.top = savedWindow.top;
+      if (savedWindow.left) {
+        windowElement.style.left = savedWindow.left;
       }
 
-      if(savedWindow.zIndex) {
-        window.style.zIndex = savedWindow.zIndex;
+      if (savedWindow.top) {
+        windowElement.style.top = savedWindow.top;
       }
 
-      if(savedWindow.hidden) {
-        window.classList.add("hidden");
+      if (savedWindow.zIndex) {
+        windowElement.style.zIndex = savedWindow.zIndex;
+      }
+
+      if (savedWindow.hidden) {
+        windowElement.classList.add("hidden");
       }
     });
   } catch (error) {
-    console.log("Could not load NovaTab layout.", error);
+    console.log("Could not load NovaTab layout.");
   }
 }
 
-function setupCloseButons() {
+function setupCloseButtons() {
   document.querySelectorAll(".close-widget").forEach((button) => {
-    button.addEventListener("click",  () => {
-      const window = button.closest(".nova-window");
+    button.onclick = () => {
+      const windowElement = button.closest(".nova-window");
 
-      if(!windwo) return;
+      if (!windowElement) {
+        return;
+      }
 
-      window.classList.add("hidden");
+      windowElement.classList.add("hidden");
       saveLayout();
-    });
+    };
   });
 }
 
-const weatherForm = document.querySelector("#weatherForm");
-const cityInput = document.querySelector("#cityInput");
-const weatherStatus = document.querySelector("#weatherStatus");
-const weatherResult = document.querySelector("#weatherResult");
+function setupWeather() {
+  const weatherForm = document.querySelector("#weatherForm");
+  const cityInput = document.querySelector("#cityInput");
+  const weatherStatus = document.querySelector("#weatherStatus");
+  const weatherResult = document.querySelector("#weatherResult");
 
-weatherForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const city = cityInput.ariaValueMax.trim();
-
-  if(!city) {
-    weatherStatus.textContent = "Please Enter a city";
+  if (!weatherForm) {
     return;
   }
 
-  weatherStatus.textContent = "Looking up the Weather...";
-  weatherResult.innerHTML = "";
+  weatherForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
-  try {
-    const locationResponse = await fetch(
-       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
-    );
+    const city = cityInput.value.trim();
 
-    if (!locationResponse.ok) {
-      throw new Error("Could not find that city.");
+    if (!city) {
+      weatherStatus.textContent = "Please enter a city.";
+      return;
     }
 
-    const locaationData = await locationResponse.json();
+    weatherStatus.textContent = "Looking up the weather...";
+    weatherResult.innerHTML = "";
 
-    if(!locaationData.results || locaationData.results.length === 0){
-      throw new Error("City not found.");
+    try {
+      const locationResponse = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+      );
+
+      if (!locationResponse.ok) {
+        throw new Error("Could not find that city.");
+      }
+
+      const locationData = await locationResponse.json();
+
+      if (!locationData.results || locationData.results.length === 0) {
+        throw new Error("City not found.");
+      }
+
+      const location = locationData.results[0];
+
+      const weatherResponse = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+      );
+
+      if (!weatherResponse.ok) {
+        throw new Error("Weather service is unavailable.");
+      }
+
+      const weatherData = await weatherResponse.json();
+      const current = weatherData.current;
+
+      weatherStatus.textContent = `${location.name}, ${location.country}`;
+
+      weatherResult.innerHTML = `
+        <div class="weather-main">
+          <strong>${Math.round(current.temperature_2m)}°C</strong>
+        </div>
+        <p>Humidity: ${current.relative_humidity_2m}%</p>
+        <p>Wind: ${Math.round(current.wind_speed_10m)} km/h</p>
+      `;
+    } catch (error) {
+      weatherStatus.textContent = error.message;
     }
-
-    const location = locaationData.results[0];
-
-    const weatherResponse = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
-    );
-
-    if(!weatherResponse.ok){
-      throw new Error("Weatheer service is unavailable.");
-    }
-
-    const weatherData = await weatherResponse.json();
-
-    const current = weatherData.current;
-
-    weatherStatus.textContent =
-   `${location.name}, ${location.country}`;
-
-   weatherResult.innerHTML = `
-   <div class="weather-main">
-   <strong>${Math.round(current.temprature_2m)}°C</strong>
-   </div>
-
-   <p>Humidity: ${current.relative_humidity_2m}%</p>
-   <p>Wind: ${Math.round(current.wind_speed_10m)} km/h</p>
-   `;
-  } catch (error) {
-    weatherStatus.textContent = error.message;
-  }
-});
+  });
+}
 
 addWidgetBtn.addEventListener("click", () => {
   widgetMenu.classList.remove("hidden");
@@ -329,7 +337,9 @@ closeMenu.addEventListener("click", () => {
 widgetMenu.addEventListener("click", (event) => {
   const button = event.target.closest(".widget-option");
 
-  if(!button) return;
+  if (!button) {
+    return;
+  }
 
   const widgetType = button.dataset.add;
 
@@ -337,7 +347,7 @@ widgetMenu.addEventListener("click", (event) => {
     `.nova-window[data-widget="${widgetType}"]`
   );
 
-  if(existing) {
+  if (existing) {
     existing.classList.remove("hidden");
     widgetMenu.classList.add("hidden");
     saveLayout();
@@ -345,58 +355,54 @@ widgetMenu.addEventListener("click", (event) => {
   }
 
   createWidget(widgetType);
-
   widgetMenu.classList.add("hidden");
 });
 
 function createWidget(type) {
   const templates = {
-    clock:`
-    <section class="nova-window" data-widget="clock">
-      <div class="window-bar">
-        <span class="windwo-title">Clock</span>
-        <button class="close-widget">x</button>
-      </div>
-
-      <div class="window-content">
-        <div id="clockTime">00:00</div>
-        <div id="clockDate">Loading date...</div>
-      </div>
-    </section>
+    clock: `
+      <section class="nova-window" data-widget="clock">
+        <div class="window-bar">
+          <span class="window-title">Clock</span>
+          <button class="close-widget">×</button>
+        </div>
+        <div class="window-content">
+          <div class="widget-clock-time">00:00</div>
+          <div class="widget-clock-date">Loading date...</div>
+        </div>
+      </section>
     `,
-    weather: `
-    <section class="nova-window" data-widget="weather">
-      <div class="window-bar">
-        <span class="window-title">Weather</span>
-        <button class="close-widget">x</button>
-      </div>
 
-      <div class="window-content">
-        <p>Weather widget</p>
-      </div>
-    </section>
+    weather: `
+      <section class="nova-window" data-widget="weather">
+        <div class="window-bar">
+          <span class="window-title">Weather</span>
+          <button class="close-widget">×</button>
+        </div>
+        <div class="window-content">
+          <p>Weather widget</p>
+        </div>
+      </section>
     `,
 
     notes: `
-    <section class="nova-window" data-widget="notes">
-      <div class="window-bar">
-        <span class="window-title">Little Notes</span>
-        <button class="close-widget">x</button>
-      </div>
-
-      <div class="window-content">
-        <textarea placeholder="Write something here..."></textarea>
-      </div>
-    </section>
+      <section class="nova-window" data-widget="notes">
+        <div class="window-bar">
+          <span class="window-title">Little Notes</span>
+          <button class="close-widget">×</button>
+        </div>
+        <div class="window-content">
+          <textarea placeholder="Write something here..."></textarea>
+        </div>
+      </section>
     `,
 
-     welcome: `
+    welcome: `
       <section class="nova-window" data-widget="welcome">
         <div class="window-bar">
           <span class="window-title">Welcome</span>
           <button class="close-widget">×</button>
         </div>
-
         <div class="window-content">
           <h2>Make this tab yours.</h2>
           <p>Drag me anywhere.</p>
@@ -405,7 +411,9 @@ function createWidget(type) {
     `
   };
 
-  if(!templates[type]) return;
+  if (!templates[type]) {
+    return;
+  }
 
   workspace.insertAdjacentHTML("beforeend", templates[type]);
 
@@ -420,18 +428,22 @@ function createWidget(type) {
   newWidget.style.zIndex = highestZIndex;
 
   makeDraggable(newWidget);
-  setupCloseButons();
+  setupCloseButtons();
   saveLayout();
 }
 
-resetBtn.add("click", () => {
+resetBtn.addEventListener("click", () => {
   localStorage.removeItem("novatab-layout");
   location.reload();
 });
 
-document.querySelectorAll(".nova-window").forEach((window) => {
-  makeDraggable(window);
+updateClock();
+setInterval(updateClock, 1000);
+
+document.querySelectorAll(".nova-window").forEach((windowElement) => {
+  makeDraggable(windowElement);
 });
 
-setupCloseButons();
+setupCloseButtons();
+setupWeather();
 loadLayout();
