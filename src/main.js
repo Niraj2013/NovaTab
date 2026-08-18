@@ -24,23 +24,23 @@ app.innerHTML = `
       </div>
 
       <div class="window-content">
-        <div id="clockTime">00:00</div>
-        <div id="clockDate">Loading date...</div>
+        <div class="clock-time">00:00</div>
+        <div class="clock-date">Loading date...</div>
       </div>
     </section>
 
     <section class="nova-window weather-window" data-widget="weather">
       <div class="window-bar">
         <span class="window-title">Weather</span>
-        <button class="close-widget" aria-label="Close Weather">×</button>
+        <button class="close-widget" aria-label="Close weather">×</button>
       </div>
 
       <div class="window-content">
-        <p id="weatherStatus">Enter a city to check the weather.</p>
+        <p class="weather-status">Enter a city to check the weather.</p>
 
-        <form id="weatherForm">
+        <form class="weather-form">
           <input
-            id="cityInput"
+            class="city-input"
             type="text"
             placeholder="Enter your city"
             autocomplete="off"
@@ -48,7 +48,7 @@ app.innerHTML = `
           <button type="submit">Check</button>
         </form>
 
-        <div id="weatherResult"></div>
+        <div class="weather-result"></div>
       </div>
     </section>
 
@@ -59,7 +59,7 @@ app.innerHTML = `
       </div>
 
       <div class="window-content">
-        <textarea id="notes" placeholder="Write something here..."></textarea>
+        <textarea class="notes" placeholder="Write something here..."></textarea>
       </div>
     </section>
 
@@ -77,6 +77,24 @@ app.innerHTML = `
         </p>
       </div>
     </section>
+
+    <section class="nova-window apod-window" data-widget="apod">
+    <div class="window-bar>
+    <span class="window-title">NASA APOD</span>
+    <button class="close-widget" aria-label="Close NASA APOD">x</button>
+    </div>
+
+    <div class="window-content">
+    <p  class="apod-status">Loading NASA's Astronomy Picture of the Day...</p>
+
+    <div class="apod-content hidden">
+    <img class="apod-image" alt="NASA Astronomy Picture of the Day" />
+    <h2 class="apod-title"></h2>
+    <p class="apod-date"></p>
+    <p class="apos-explanation"></p>
+    </div>
+    </div>
+    </section>
   </main>
 
   <div id="widgetMenu" class="widget-menu hidden">
@@ -90,6 +108,7 @@ app.innerHTML = `
       <button class="widget-option" data-add="weather">Weather</button>
       <button class="widget-option" data-add="notes">Notes</button>
       <button class="widget-option" data-add="welcome">Welcome card</button>
+      <button class="widget-option" data-add="apod">NASA APOD</button>
     </div>
   </div>
 `;
@@ -116,16 +135,18 @@ function updateClock() {
     day: "numeric"
   });
 
-  const clockTime = document.querySelector("#clockTime");
-  const clockDate = document.querySelector("#clockDate");
+  document.querySelectorAll(".clock-time").forEach((element) => {
+    element.textContent = time;
+  });
 
-  if (clockTime) {
-    clockTime.textContent = time;
-  }
+  document.querySelectorAll(".clock-date").forEach((element) => {
+    element.textContent = date;
+  });
+}
 
-  if (clockDate) {
-    clockDate.textContent = date;
-  }
+function bringToFront(element) {
+  highestZIndex += 1;
+  element.style.zIndex = highestZIndex;
 }
 
 function makeDraggable(element) {
@@ -146,8 +167,7 @@ function makeDraggable(element) {
 
     dragging = true;
 
-    highestZIndex += 1;
-    element.style.zIndex = highestZIndex;
+    bringToFront(element);
 
     const rect = element.getBoundingClientRect();
 
@@ -167,15 +187,23 @@ function makeDraggable(element) {
     let left = event.clientX - workspaceRect.left - offsetX;
     let top = event.clientY - workspaceRect.top - offsetY;
 
-    left = Math.max(0, left);
-    top = Math.max(0, top);
+    const maxLeft = Math.max(0, workspace.clientWidth - element.offsetWidth);
+    const maxTop = Math.max(0, workspace.clientHeight - element.offsetHeight);
+
+    left = Math.max(0, Math.min(left, maxLeft));
+    top = Math.max(0, Math.min(top, maxTop));
 
     element.style.left = `${left}px`;
     element.style.top = `${top}px`;
   });
 
-  bar.addEventListener("pointerup", () => {
+  bar.addEventListener("pointerup", (event) => {
     dragging = false;
+
+    if (bar.hasPointerCapture(event.pointerId)) {
+      bar.releasePointerCapture(event.pointerId);
+    }
+
     saveLayout();
   });
 
@@ -184,22 +212,21 @@ function makeDraggable(element) {
   });
 
   element.addEventListener("pointerdown", () => {
-    highestZIndex += 1;
-    element.style.zIndex = highestZIndex;
+    bringToFront(element);
   });
 }
 
 function saveLayout() {
   const layout = {};
 
-  document.querySelectorAll(".nova-window").forEach((windowElement) => {
-    const widget = windowElement.dataset.widget;
+  document.querySelectorAll(".nova-window").forEach((element) => {
+    const widget = element.dataset.widget;
 
     layout[widget] = {
-      left: windowElement.style.left,
-      top: windowElement.style.top,
-      zIndex: windowElement.style.zIndex,
-      hidden: windowElement.classList.contains("hidden")
+      left: element.style.left,
+      top: element.style.top,
+      zIndex: element.style.zIndex,
+      hidden: element.classList.contains("hidden")
     };
   });
 
@@ -216,8 +243,8 @@ function loadLayout() {
   try {
     const layout = JSON.parse(saved);
 
-    document.querySelectorAll(".nova-window").forEach((windowElement) => {
-      const widget = windowElement.dataset.widget;
+    document.querySelectorAll(".nova-window").forEach((element) => {
+      const widget = element.dataset.widget;
       const savedWindow = layout[widget];
 
       if (!savedWindow) {
@@ -225,139 +252,178 @@ function loadLayout() {
       }
 
       if (savedWindow.left) {
-        windowElement.style.left = savedWindow.left;
+        element.style.left = savedWindow.left;
       }
 
       if (savedWindow.top) {
-        windowElement.style.top = savedWindow.top;
+        element.style.top = savedWindow.top;
       }
 
       if (savedWindow.zIndex) {
-        windowElement.style.zIndex = savedWindow.zIndex;
+        element.style.zIndex = savedWindow.zIndex;
       }
 
       if (savedWindow.hidden) {
-        windowElement.classList.add("hidden");
+        element.classList.add("hidden");
       }
     });
-  } catch (error) {
-    console.log("Could not load NovaTab layout.");
+  } catch {
+    localStorage.removeItem("novatab-layout");
   }
 }
 
 function setupCloseButtons() {
   document.querySelectorAll(".close-widget").forEach((button) => {
     button.onclick = () => {
-      const windowElement = button.closest(".nova-window");
+      const element = button.closest(".nova-window");
 
-      if (!windowElement) {
+      if (!element) {
         return;
       }
 
-      windowElement.classList.add("hidden");
+      element.classList.add("hidden");
       saveLayout();
     };
   });
 }
 
-function setupWeather() {
-  const weatherForm = document.querySelector("#weatherForm");
-  const cityInput = document.querySelector("#cityInput");
-  const weatherStatus = document.querySelector("#weatherStatus");
-  const weatherResult = document.querySelector("#weatherResult");
+function setupNotes() {
+  document.querySelectorAll(".notes").forEach((textarea) => {
+    textarea.value = localStorage.getItem("novatab-notes") || "";
 
-  if (!weatherForm) {
-    return;
-  }
-
-  weatherForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const city = cityInput.value.trim();
-
-    if (!city) {
-      weatherStatus.textContent = "Please enter a city.";
-      return;
-    }
-
-    weatherStatus.textContent = "Looking up the weather...";
-    weatherResult.innerHTML = "";
-
-    try {
-      const locationResponse = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
-      );
-
-      if (!locationResponse.ok) {
-        throw new Error("Could not find that city.");
-      }
-
-      const locationData = await locationResponse.json();
-
-      if (!locationData.results || locationData.results.length === 0) {
-        throw new Error("City not found.");
-      }
-
-      const location = locationData.results[0];
-
-      const weatherResponse = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
-      );
-
-      if (!weatherResponse.ok) {
-        throw new Error("Weather service is unavailable.");
-      }
-
-      const weatherData = await weatherResponse.json();
-      const current = weatherData.current;
-
-      weatherStatus.textContent = `${location.name}, ${location.country}`;
-
-      weatherResult.innerHTML = `
-        <div class="weather-main">
-          <strong>${Math.round(current.temperature_2m)}°C</strong>
-        </div>
-        <p>Humidity: ${current.relative_humidity_2m}%</p>
-        <p>Wind: ${Math.round(current.wind_speed_10m)} km/h</p>
-      `;
-    } catch (error) {
-      weatherStatus.textContent = error.message;
-    }
+    textarea.addEventListener("input", () => {
+      localStorage.setItem("novatab-notes", textarea.value);
+    });
   });
 }
 
-addWidgetBtn.addEventListener("click", () => {
-  widgetMenu.classList.remove("hidden");
-});
+function weatherCodeText(code) {
+  if (code === 0) return "Clear sky";
+  if (code === 1 || code === 2) return "Partly cloudy";
+  if (code === 3) return "Cloudy";
+  if (code === 45 || code === 48) return "Foggy";
+  if (code >= 51 && code <= 57) return "Drizzle";
+  if (code >= 61 && code <= 67) return "Rain";
+  if (code >= 71 && code <= 77) return "Snow";
+  if (code >= 80 && code <= 82) return "Rain showers";
+  if (code >= 85 && code <= 86) return "Snow showers";
+  if (code >= 95 && code <= 99) return "Thunderstorm";
 
-closeMenu.addEventListener("click", () => {
-  widgetMenu.classList.add("hidden");
-});
+  return "Unknown conditions";
+}
 
-widgetMenu.addEventListener("click", (event) => {
-  const button = event.target.closest(".widget-option");
+function setupWeather() {
+  document.querySelectorAll(".weather-form").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-  if (!button) {
+      const windowElement = form.closest(".nova-window");
+      const cityInput = form.querySelector(".city-input");
+      const status = windowElement.querySelector(".weather-status");
+      const result = windowElement.querySelector(".weather-result");
+
+      const city = cityInput.value.trim();
+
+      if (!city) {
+        status.textContent = "Please enter a city.";
+        return;
+      }
+
+      status.textContent = "Looking up the weather...";
+      result.innerHTML = "";
+
+      try {
+        const locationResponse = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+        );
+
+        if (!locationResponse.ok) {
+          throw new Error("Could not find that city.");
+        }
+
+        const locationData = await locationResponse.json();
+
+        if (!locationData.results || locationData.results.length === 0) {
+          throw new Error("City not found.");
+        }
+
+        const location = locationData.results[0];
+
+        const weatherResponse = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+        );
+
+        if (!weatherResponse.ok) {
+          throw new Error("Weather service is unavailable.");
+        }
+
+        const weatherData = await weatherResponse.json();
+        const current = weatherData.current;
+
+        status.textContent = `${location.name}, ${location.country}`;
+
+        result.innerHTML = `
+          <div class="weather-main">
+            <strong>${Math.round(current.temperature_2m)}°C</strong>
+            <span>${weatherCodeText(current.weather_code)}</span>
+          </div>
+          <p>Humidity: ${current.relative_humidity_2m}%</p>
+          <p>Wind: ${Math.round(current.wind_speed_10m)} km/h</p>
+        `;
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    });
+  });
+}
+
+async function setupApod() {
+  const status = document.querySelector(".apod-status");
+  const content = document.querySelector(".apod-content");
+  const image= document.querySelector(".apod-image");
+  const title = document.querySelector(".apod-title");
+  const date = document.querySelector(".apod-data");
+  const explanation = document.querySelector(".apod-explanation");
+
+  if(!status || !content) {
     return;
   }
 
-  const widgetType = button.dataset.add;
+  const apiKey = import.meta.env.VITE_NASA_API_KEY;
 
-  const existing = document.querySelector(
-    `.nova-window[data-widget="${widgetType}"]`
-  );
-
-  if (existing) {
-    existing.classList.remove("hidden");
-    widgetMenu.classList.add("hidden");
-    saveLayout();
+  if(!apiKey) {
+    status.textContent = "NASA API key is missing.";
     return;
   }
 
-  createWidget(widgetType);
-  widgetMenu.classList.add("hidden");
-});
+  try {
+    const response = await fetch(
+      `https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(apiKey)}`
+    );
 
+    if(!response.ok) {
+      throw new Error("Could not load NASA APOD.");
+    }
+
+    const data = await response.json();
+
+    if(data.media_type !=="image") {
+      status.textContent = "Today's NASA APOD is not an iamge.";
+      return;
+    }
+
+    image.src = data.url;
+    image.alt = data.title || "NASA Astronomy Picture of the Day";
+    title.textContent = data.title || "Astronomy Picture of the Day";
+    data.textContent = data.date || "";
+    explanation.textContent = data.explanation || "";
+
+    status.classList.add("hidden");
+    content.classList.remove("hidden");
+  }catch(error) {
+    status.textContent = error.message;
+  }
+}
 function createWidget(type) {
   const templates = {
     clock: `
@@ -367,8 +433,8 @@ function createWidget(type) {
           <button class="close-widget">×</button>
         </div>
         <div class="window-content">
-          <div class="widget-clock-time">00:00</div>
-          <div class="widget-clock-date">Loading date...</div>
+          <div class="clock-time">00:00</div>
+          <div class="clock-date">Loading date...</div>
         </div>
       </section>
     `,
@@ -380,7 +446,12 @@ function createWidget(type) {
           <button class="close-widget">×</button>
         </div>
         <div class="window-content">
-          <p>Weather widget</p>
+          <p class="weather-status">Enter a city to check the weather.</p>
+          <form class="weather-form">
+            <input class="city-input" type="text" placeholder="Enter your city" autocomplete="off" />
+            <button type="submit">Check</button>
+          </form>
+          <div class="weather-result"></div>
         </div>
       </section>
     `,
@@ -392,7 +463,7 @@ function createWidget(type) {
           <button class="close-widget">×</button>
         </div>
         <div class="window-content">
-          <textarea placeholder="Write something here..."></textarea>
+          <textarea class="notes" placeholder="Write something here..."></textarea>
         </div>
       </section>
     `,
@@ -424,26 +495,69 @@ function createWidget(type) {
   newWidget.style.left = `${80 + Math.random() * 200}px`;
   newWidget.style.top = `${100 + Math.random() * 150}px`;
 
-  highestZIndex += 1;
-  newWidget.style.zIndex = highestZIndex;
+  bringToFront(newWidget);
 
   makeDraggable(newWidget);
   setupCloseButtons();
+  setupNotes();
+  setupWeather();
+
   saveLayout();
 }
 
+addWidgetBtn.addEventListener("click", () => {
+  widgetMenu.classList.remove("hidden");
+});
+
+closeMenu.addEventListener("click", () => {
+  widgetMenu.classList.add("hidden");
+});
+
+widgetMenu.addEventListener("click", (event) => {
+  const button = event.target.closest(".widget-option");
+
+  if (!button) {
+    return;
+  }
+
+  const widgetType = button.dataset.add;
+
+  const existing = document.querySelector(
+    `.nova-window[data-widget="${widgetType}"]`
+  );
+
+  if (existing) {
+    existing.classList.remove("hidden");
+    bringToFront(existing);
+    widgetMenu.classList.add("hidden");
+    saveLayout();
+    return;
+  }
+
+  createWidget(widgetType);
+  widgetMenu.classList.add("hidden");
+});
+
+widgetMenu.addEventListener("pointerdown", (event) => {
+  if (event.target === widgetMenu) {
+    widgetMenu.classList.add("hidden");
+  }
+});
+
 resetBtn.addEventListener("click", () => {
   localStorage.removeItem("novatab-layout");
+  localStorage.removeItem("novatab-notes");
   location.reload();
 });
 
-updateClock();
-setInterval(updateClock, 1000);
-
-document.querySelectorAll(".nova-window").forEach((windowElement) => {
-  makeDraggable(windowElement);
+document.querySelectorAll(".nova-window").forEach((element) => {
+  makeDraggable(element);
 });
 
 setupCloseButtons();
+setupNotes();
 setupWeather();
+setupApod();
+updateClock();
+setInterval(updateClock, 1000);
 loadLayout();
