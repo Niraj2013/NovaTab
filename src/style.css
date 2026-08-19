@@ -76,3 +76,120 @@ button {
   border-bottom: 2px solid rgba(75, 48, 37, 0.14);
   box-shadow: 0 5px 14px rgba(75, 48, 37, 0.07);
 }
+
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.brand-mark{
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: var(--chocolate);
+  color:#fff8ed;
+  font-size: 25px;
+  font-weight: 800;
+  border-radius: 14px 10px 13px 8px;
+  transform: rotate(-4deg);
+  box-shadow: 3px 4px 0 var(--caramel);
+}
+
+.brand h1{
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 30px;
+  color: var(--cocoa);
+  letter-spacing: -0.5px;
+}
+
+.brand p{
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.top-actions{
+  display: flex;
+  gap: 10px;
+}
+
+.top-actions button,
+.widget-menu button{
+  border: 2px solid rgba(75, 48, 37, 0.2);
+  background: var(--paper-light);
+  padding: 10px 15px;
+  border-radius: 11px 8px 12px 9px;
+  cursor: pointer;
+  box-shadow: 2px 3px 0 rgba(75, 48, 37, 0.1);
+  transition: 
+  transform 0.15s ease,
+  box-shadow 0.15s ease;
+}
+
+.top-actions button:hover,
+.widget-menu button-hover{
+  transform: translateY(-2px) rotate(-1deg);
+  box-shadow: 3px 5px 0 rgba(75, 48, 37, 0.13);
+}
+
+#addWidgetBtn{
+  background: var(--yellow);
+}
+
+#resetBtn{
+  background: var(--pink);
+}
+
+.workspace{
+  position: relative;
+  min-height: calc(100vh - 101px);
+  overflow: hidden;
+  padding: 35px;
+}
+
+.workspace::before{
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 80px;
+  top: 30px;
+  right: 70px;
+  background: rgba(197, 139, 88, 0.08);
+  transform: rotate(4deg);
+  border-radius: 48% 52% 45% 55%;
+  pointer-events: none;
+}
+
+.workspace::after{
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 60px;
+  bottom: 50px;
+  left: 70px;
+  background: rgba(245, 201, 206, 0.12);
+  transform: rotate(-7deg);
+  border-radius: 52% 48% 55% 45%;
+  pointer-events: none;
+}
+
+.nova-window{
+  position: absolute;
+  width: 300px;
+  min-width: 170px;
+  overflow: hidden;
+  color: var(--ink);
+  box-shadow: var(--shadow-soft), var(--shadow-paper);
+  transition:
+  box-shadow 0.15s ease,
+  transform 0.15s ease;
+}
+
+.nova-window:hover{
+  box-shadow: 
+  0 12px 24px rgba(75, 48, 37, 0.16),
+  4px 7px 0 rgba(75, 48, 37, 0.08);
+}
