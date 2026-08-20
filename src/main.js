@@ -19,85 +19,23 @@ app.innerHTML = `
   </header>
 
   <main id="workspace" class="workspace">
-    <section class="nova-window clock-window" data-widget="clock">
-      <div class="window-bar">
-        <span class="window-title">Clock</span>
-        <button class="close-widget" aria-label="Close clock">×</button>
-      </div>
 
-      <div class="window-content">
-        <div class="clock-time">00:00</div>
-        <div class="clock-date">Loading date...</div>
-      </div>
-    </section>
-
-    <section class="nova-window weather-window" data-widget="weather">
-      <div class="window-bar">
-        <span class="window-title">Weather</span>
-        <button class="close-widget" aria-label="Close weather">×</button>
-      </div>
-
-      <div class="window-content">
-        <p class="weather-status">Enter a city to check the weather.</p>
-
-        <form class="weather-form">
-          <input
-            class="city-input"
-            type="text"
-            placeholder="Enter your city"
-            autocomplete="off"
-          />
-          <button type="submit">Check</button>
-        </form>
-
-        <div class="weather-result"></div>
-      </div>
-    </section>
-
-    <section class="nova-window notes-window" data-widget="notes">
-      <div class="window-bar">
-        <span class="window-title">Little Notes</span>
-        <button class="close-widget" aria-label="Close notes">×</button>
-      </div>
-
-      <div class="window-content">
-        <textarea class="notes" placeholder="Write something here..."></textarea>
-      </div>
-    </section>
-
-    <section class="nova-window welcome-window" data-widget="welcome">
-      <div class="window-bar">
-        <span class="window-title">Welcome</span>
-        <button class="close-widget" aria-label="Close welcome">×</button>
-      </div>
-
-      <div class="window-content">
-        <h2>Make this tab yours.</h2>
-        <p>
-          Drag things around, add widgets and create a workspace
-          that feels like you.
-        </p>
-      </div>
-    </section>
-
-    <section class="nova-window apod-window" data-widget="apod">
-    <div class="window-bar>
-    <span class="window-title">NASA APOD</span>
-    <button class="close-widget" aria-label="Close NASA APOD">x</button>
+  <section class="nova-window welcome-window" data-widget="welcome">
+    <div class="window-bar">
+      <span class="window-title">Welcome</span>
+      <button class="close-widget" aria-label="Close welcome">×</button>
     </div>
 
     <div class="window-content">
-    <p  class="apod-status">Loading NASA's Astronomy Picture of the Day...</p>
+      <h2>Make this tab yours.</h2>
+      <p>
+        Drag things around, add widgets and create a workspace
+        that feels like you.
+      </p>
+    </div>
+  </section>
 
-    <div class="apod-content hidden">
-    <img class="apod-image" alt="NASA Astronomy Picture of the Day" />
-    <h2 class="apod-title"></h2>
-    <p class="apod-date"></p>
-    <p class="apos-explanation"></p>
-    </div>
-    </div>
-    </section>
-  </main>
+</main>
 
   <div id="widgetMenu" class="widget-menu hidden">
     <div class="widget-menu-card">
@@ -225,14 +163,17 @@ function saveLayout() {
     const widget = element.dataset.widget;
 
     layout[widget] = {
-      left: element.style.left,
-      top: element.style.top,
-      zIndex: element.style.zIndex,
+      left: element.style.left || "",
+      top: element.style.top || "",
+      zIndex: element.style.zIndex || "",
       hidden: element.classList.contains("hidden")
     };
   });
 
-  localStorage.setItem("novatab-layout", JSON.stringify(layout));
+  localStorage.setItem(
+    "novatab-layout",
+    JSON.stringify(layout)
+  );
 }
 
 function loadLayout() {
@@ -245,31 +186,59 @@ function loadLayout() {
   try {
     const layout = JSON.parse(saved);
 
-    document.querySelectorAll(".nova-window").forEach((element) => {
-      const widget = element.dataset.widget;
-      const savedWindow = layout[widget];
+    Object.entries(layout).forEach(
+      ([widget, savedWindow]) => {
 
-      if (!savedWindow) {
-        return;
-      }
+        let element = document.querySelector(
+          `.nova-window[data-widget="${widget}"]`
+        );
 
-      if (savedWindow.left) {
-        element.style.left = savedWindow.left;
-      }
+        /*
+         * If the widget was saved previously but
+         * does not currently exist in the HTML,
+         * create it again.
+         */
+        if (!element && !savedWindow.hidden) {
+          createWidget(widget);
 
-      if (savedWindow.top) {
-        element.style.top = savedWindow.top;
-      }
+          element = document.querySelector(
+            `.nova-window[data-widget="${widget}"]:last-child`
+          );
+        }
 
-      if (savedWindow.zIndex) {
-        element.style.zIndex = savedWindow.zIndex;
-      }
+        if (!element) {
+          return;
+        }
 
-      if (savedWindow.hidden) {
-        element.classList.add("hidden");
+        if (savedWindow.left) {
+          element.style.left =
+            savedWindow.left;
+        }
+
+        if (savedWindow.top) {
+          element.style.top =
+            savedWindow.top;
+        }
+
+        if (savedWindow.zIndex) {
+          element.style.zIndex =
+            savedWindow.zIndex;
+        }
+
+        if (savedWindow.hidden) {
+          element.classList.add("hidden");
+        } else {
+          element.classList.remove("hidden");
+        }
       }
-    });
-  } catch {
+    );
+
+  } catch (error) {
+    console.error(
+      "Could not restore NovaTab layout:",
+      error
+    );
+
     localStorage.removeItem("novatab-layout");
   }
 }
@@ -379,21 +348,21 @@ function setupWeather() {
   });
 }
 
-async function setupApod() {
-  const status = document.querySelector(".apod-status");
-  const content = document.querySelector(".apod-content");
-  const image= document.querySelector(".apod-image");
-  const title = document.querySelector(".apod-title");
-  const date = document.querySelector(".apod-data");
-  const explanation = document.querySelector(".apod-explanation");
+async function setupApod(windowElement) {
+  const status = windowElement.querySelector(".apod-status");
+  const content = windowElement.querySelector(".apod-content");
+  const image = windowElement.querySelector(".apod-image");
+  const title = windowElement.querySelector(".apod-title");
+  const date = windowElement.querySelector(".apod-date");
+  const explanation = windowElement.querySelector(".apod-explanation");
 
-  if(!status || !content) {
+  if (!status || !content) {
     return;
   }
 
   const apiKey = import.meta.env.VITE_NASA_API_KEY;
 
-  if(!apiKey) {
+  if (!apiKey) {
     status.textContent = "NASA API key is missing.";
     return;
   }
@@ -403,37 +372,72 @@ async function setupApod() {
       `https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(apiKey)}`
     );
 
-    if(!response.ok) {
+    if (!response.ok) {
       throw new Error("Could not load NASA APOD.");
     }
 
     const data = await response.json();
 
-    if(data.media_type !=="image") {
-      status.textContent = "Today's NASA APOD is not an iamge.";
-      return;
+    if (data.media_type === "image") {
+      image.src = data.url;
+      image.alt = data.title || "NASA Astronomy Picture of the Day";
+
+      title.textContent =
+        data.title || "Astronomy Picture of the Day";
+
+      date.textContent = data.date || "";
+
+      explanation.textContent =
+        data.explanation || "";
+
+      status.classList.add("hidden");
+      content.classList.remove("hidden");
+
+    } else if (data.media_type === "video") {
+
+      content.innerHTML = `
+        <iframe
+          class="apod-video"
+          src="${data.url}"
+          title="${data.title || "NASA APOD"}"
+          allowfullscreen
+        ></iframe>
+
+        <h3 class="apod-title">
+          ${data.title || "NASA APOD"}
+        </h3>
+
+        <p class="apod-date">
+          ${data.date || ""}
+        </p>
+
+        <p class="apod-explanation">
+          ${data.explanation || ""}
+        </p>
+      `;
+
+      status.classList.add("hidden");
+      content.classList.remove("hidden");
+
+    } else {
+      status.textContent =
+        "NASA APOD is unavailable.";
     }
 
-    image.src = data.url;
-    image.alt = data.title || "NASA Astronomy Picture of the Day";
-    title.textContent = data.title || "Astronomy Picture of the Day";
-    data.textContent = data.date || "";
-    explanation.textContent = data.explanation || "";
-
-    status.classList.add("hidden");
-    content.classList.remove("hidden");
-  }catch(error) {
+  } catch (error) {
     status.textContent = error.message;
   }
 }
+
 function createWidget(type) {
   const templates = {
     clock: `
-      <section class="nova-window" data-widget="clock">
+      <section class="nova-window clock-window" data-widget="clock">
         <div class="window-bar">
           <span class="window-title">Clock</span>
-          <button class="close-widget">×</button>
+          <button class="close-widget" aria-label="Close clock">×</button>
         </div>
+
         <div class="window-content">
           <div class="clock-time">00:00</div>
           <div class="clock-date">Loading date...</div>
@@ -442,43 +446,90 @@ function createWidget(type) {
     `,
 
     weather: `
-      <section class="nova-window" data-widget="weather">
+      <section class="nova-window weather-window" data-widget="weather">
         <div class="window-bar">
           <span class="window-title">Weather</span>
-          <button class="close-widget">×</button>
+          <button class="close-widget" aria-label="Close weather">×</button>
         </div>
+
         <div class="window-content">
-          <p class="weather-status">Enter a city to check the weather.</p>
+          <p class="weather-status">
+            Enter a city to check the weather.
+          </p>
+
           <form class="weather-form">
-            <input class="city-input" type="text" placeholder="Enter your city" autocomplete="off" />
+            <input
+              class="city-input"
+              type="text"
+              placeholder="Enter your city"
+              autocomplete="off"
+            />
+
             <button type="submit">Check</button>
           </form>
+
           <div class="weather-result"></div>
         </div>
       </section>
     `,
 
     notes: `
-      <section class="nova-window" data-widget="notes">
+      <section class="nova-window notes-window" data-widget="notes">
         <div class="window-bar">
           <span class="window-title">Little Notes</span>
-          <button class="close-widget">×</button>
+          <button class="close-widget" aria-label="Close notes">×</button>
         </div>
+
         <div class="window-content">
-          <textarea class="notes" placeholder="Write something here..."></textarea>
+          <textarea
+            class="notes"
+            placeholder="Write something here..."
+          ></textarea>
         </div>
       </section>
     `,
 
     welcome: `
-      <section class="nova-window" data-widget="welcome">
+      <section class="nova-window welcome-window" data-widget="welcome">
         <div class="window-bar">
           <span class="window-title">Welcome</span>
-          <button class="close-widget">×</button>
+          <button class="close-widget" aria-label="Close welcome">×</button>
         </div>
+
         <div class="window-content">
           <h2>Make this tab yours.</h2>
-          <p>Drag me anywhere.</p>
+          <p>
+            Drag things around, add widgets and create a workspace
+            that feels like you.
+          </p>
+        </div>
+      </section>
+    `,
+
+    apod: `
+      <section class="nova-window apod-window" data-widget="apod">
+        <div class="window-bar">
+          <span class="window-title">NASA APOD</span>
+          <button class="close-widget" aria-label="Close NASA APOD">×</button>
+        </div>
+
+        <div class="window-content">
+          <p class="apod-status">
+            Loading NASA's Astronomy Picture of the Day...
+          </p>
+
+          <div class="apod-content hidden">
+            <img
+              class="apod-image"
+              alt="NASA Astronomy Picture of the Day"
+            />
+
+            <h3 class="apod-title"></h3>
+
+            <p class="apod-date"></p>
+
+            <p class="apod-explanation"></p>
+          </div>
         </div>
       </section>
     `
@@ -488,21 +539,37 @@ function createWidget(type) {
     return;
   }
 
-  workspace.insertAdjacentHTML("beforeend", templates[type]);
-
-  const newWidget = workspace.querySelector(
-    `.nova-window[data-widget="${type}"]:last-child`
+  workspace.insertAdjacentHTML(
+    "beforeend",
+    templates[type]
   );
 
-  newWidget.style.left = `${80 + Math.random() * 200}px`;
-  newWidget.style.top = `${100 + Math.random() * 150}px`;
+  const newWidget =
+    workspace.querySelector(
+      `.nova-window[data-widget="${type}"]:last-child`
+    );
+
+  if (!newWidget) {
+    return;
+  }
+
+  newWidget.style.left =
+    `${80 + Math.random() * 200}px`;
+
+  newWidget.style.top =
+    `${100 + Math.random() * 150}px`;
 
   bringToFront(newWidget);
 
   makeDraggable(newWidget);
+
   setupCloseButtons();
   setupNotes();
   setupWeather();
+
+  if (type === "apod") {
+    setupApod(newWidget);
+  }
 
   saveLayout();
 }
@@ -530,13 +597,18 @@ widgetMenu.addEventListener("click", (event) => {
 
   if (existing) {
     existing.classList.remove("hidden");
+
     bringToFront(existing);
+
     widgetMenu.classList.add("hidden");
+
     saveLayout();
+
     return;
   }
 
   createWidget(widgetType);
+
   widgetMenu.classList.add("hidden");
 });
 
@@ -549,6 +621,8 @@ widgetMenu.addEventListener("pointerdown", (event) => {
 resetBtn.addEventListener("click", () => {
   localStorage.removeItem("novatab-layout");
   localStorage.removeItem("novatab-notes");
+  localStorage.removeItem("novatab-notes-list");
+
   location.reload();
 });
 
@@ -559,7 +633,8 @@ document.querySelectorAll(".nova-window").forEach((element) => {
 setupCloseButtons();
 setupNotes();
 setupWeather();
-setupApod();
-updateClock();
+
 setInterval(updateClock, 1000);
+
 loadLayout();
+updateClock();

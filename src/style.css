@@ -67,7 +67,7 @@ button {
 .topbar{
   position: relative;
   z-index: 20;
-  display: fflex;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
@@ -308,6 +308,71 @@ button {
   border-radius: 12px 8px 14px 9px;
 }
 
+.apod-window {
+  width: 320px;
+  max-width: 320px;
+  background: #fffaf0;
+  border: 1px solid rgba(75, 48, 37, 0.18);
+  border-radius: 3px;
+  transform: rotate(-1deg);
+  box-shadow:
+    6px 9px 18px rgba(75, 48, 37, 0.17),
+    2px 3px 0 rgba(75, 48, 37, 0.08);
+}
+
+.apod-window .window-bar {
+  background: #f4ead8;
+}
+
+.apod-window .window-content {
+  padding: 12px;
+}
+
+.apod-image {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border: 1px solid rgba(75, 48, 37, 0.15);
+  background: #e8dbc2;
+}
+
+.apod-window h2,
+.apod-window h3 {
+  margin: 10px 2px 5px;
+  font-family: Georgia, serif;
+  color: var(--cocoa);
+  line-height: 1.2;
+}
+.apod-date {
+  margin: 0 2px 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.apod-explanation {
+  margin: 0 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+
+  max-height: 85px;
+  overflow-y: auto;
+}
+
+.apod-video {
+  display: block;
+  width: 100%;
+  height: 180px;
+  border: 0;
+  background: #1e1a18;
+}
+
+.apod-status {
+  margin: 5px 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
 .clock-time{
   font-family: Georgia, serif;
   font-size: 46px;
