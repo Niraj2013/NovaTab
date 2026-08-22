@@ -625,3 +625,4 @@ setupWeather();
 setInterval(updateClock, 1000);
 loadLayout();
 updateClock();
+setupStickerStamp();
