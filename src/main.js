@@ -223,6 +223,305 @@ function bringToFront(element) {
 
 }
 
+let selectedWidget = null;
+
+function setupWidgetEditor() {
+  if (document.querySelector("#widgetEditor")) return;
+
+  document.body.insertAdjacentHTML("beforeend", `
+    <aside id="widgetEditor" class="widget-editor hidden">
+      <div class="editor-head">
+        <h3>Edit widget</h3>
+        <button id="closeEditor">×</button>
+      </div>
+
+      <label>Width <output id="widthValue"></output></label>
+      <input id="widthControl" type="range" min="170" max="600" step="1">
+
+      <label>Height <output id="heightValue"></output></label>
+      <input id="heightControl" type="range" min="80" max="600" step="1">
+
+      <label>Rotation <output id="rotationValue"></output></label>
+      <input id="rotationControl" type="range" min="-15" max="15" step="0.5">
+
+      <div class="editor-row">
+        <label>X <input id="xControl" type="number"></label>
+        <label>Y <input id="yControl" type="number"></label>
+      </div>
+
+      <label>Material</label>
+      <select id="materialControl">
+        <option value="">Original</option>
+        <option value="paper">Paper</option>
+        <option value="kraft">Kraft</option>
+        <option value="card">Card</option>
+        <option value="gloss">Gloss</option>
+      </select>
+
+      <label>Colour</label>
+      <select id="colorControl">
+        <option value="">Original</option>
+        <option value="rose">Rose</option>
+        <option value="blue">Blue</option>
+        <option value="yellow">Yellow</option>
+        <option value="mint">Mint</option>
+        <option value="lavender">Lavender</option>
+      </select>
+
+      <label>Shadow</label>
+      <select id="shadowControl">
+        <option value="">Original</option>
+        <option value="soft">Soft</option>
+        <option value="deep">Deep</option>
+        <option value="flat">Flat</option>
+        <option value="none">None</option>
+      </select>
+
+      <label>Texture</label>
+      <select id="textureControl">
+        <option value="">None</option>
+        <option value="dots">Dots</option>
+        <option value="lines">Lines</option>
+        <option value="fibers">Fibers</option>
+      </select>
+
+      <div class="editor-layer">
+        <button id="sendBack">Send back</button>
+        <button id="bringFront">Bring front</button>
+      </div>
+    </aside>
+  `);
+
+  document.querySelector("#closeEditor").onclick = closeWidgetEditor;
+
+  const controls = [
+    ["widthControl", updateEditorSize],
+    ["heightControl", updateEditorSize],
+    ["rotationControl", updateEditorRotation],
+    ["xControl", updateEditorPosition],
+    ["yControl", updateEditorPosition],
+    ["materialControl", updateEditorStyle],
+    ["colorControl", updateEditorStyle],
+    ["shadowControl", updateEditorStyle],
+    ["textureControl", updateEditorStyle]
+  ];
+
+  controls.forEach(([id, fn]) => {
+    document.querySelector(`#${id}`).addEventListener("input", fn);
+    document.querySelector(`#${id}`).addEventListener("change", fn);
+  });
+
+  document.querySelector("#bringFront").onclick = () => {
+    if (!selectedWidget) return;
+    bringToFront(selectedWidget);
+    saveLayout();
+  };
+
+  document.querySelector("#sendBack").onclick = () => {
+    if (!selectedWidget) return;
+    selectedWidget.style.zIndex = "1";
+    saveLayout();
+  };
+
+  document.querySelectorAll(".nova-window").forEach(decorateWidget);
+}
+
+function decorateWidget(element) {
+  if (element.dataset.editorReady) return;
+
+  element.dataset.editorReady = "1";
+  element.tabIndex = 0;
+
+  const handle = document.createElement("div");
+  handle.className = "resize-handle";
+  element.appendChild(handle);
+
+  const texture = document.createElement("div");
+  texture.className = "editor-texture";
+  element.appendChild(texture);
+
+  element.addEventListener("dblclick", event => {
+    if (
+      event.target.closest("button") ||
+      event.target.closest("textarea") ||
+      event.target.closest("input") ||
+      event.target.closest("select")
+    ) return;
+
+    openWidgetEditor(element);
+  });
+
+  element.addEventListener("keydown", event => {
+    if (event.key === "Enter" && document.activeElement === element) {
+      openWidgetEditor(element);
+    }
+  });
+
+  setupResizeHandle(element, handle);
+}
+
+function openWidgetEditor(element) {
+  selectedWidget = element;
+  bringToFront(element);
+
+  const editor = document.querySelector("#widgetEditor");
+  editor.classList.remove("hidden");
+
+  const width = Math.round(element.getBoundingClientRect().width);
+  const height = Math.round(element.getBoundingClientRect().height);
+  const rotation = parseFloat(element.style.getPropertyValue("--widget-rotation")) || 0;
+
+  document.querySelector("#widthControl").value = width;
+  document.querySelector("#heightControl").value = height;
+  document.querySelector("#rotationControl").value = rotation;
+  document.querySelector("#xControl").value = parseInt(element.style.left) || 0;
+  document.querySelector("#yControl").value = parseInt(element.style.top) || 0;
+
+  document.querySelector("#materialControl").value = element.dataset.material || "";
+  document.querySelector("#colorControl").value = element.dataset.color || "";
+  document.querySelector("#shadowControl").value = element.dataset.shadow || "";
+  document.querySelector("#textureControl").value = element.dataset.texture || "";
+
+  updateEditorLabels();
+}
+
+function closeWidgetEditor() {
+  selectedWidget = null;
+  document.querySelector("#widgetEditor").classList.add("hidden");
+  document.querySelectorAll(".nova-window").forEach(el => el.classList.remove("editor-selected"));
+}
+
+function updateEditorLabels() {
+  document.querySelector("#widthValue").textContent =
+    `${document.querySelector("#widthControl").value}px`;
+
+  document.querySelector("#heightValue").textContent =
+    `${document.querySelector("#heightControl").value}px`;
+
+  document.querySelector("#rotationValue").textContent =
+    `${document.querySelector("#rotationControl").value}°`;
+}
+
+function updateEditorSize() {
+  if (!selectedWidget) return;
+
+  selectedWidget.style.width =
+    `${document.querySelector("#widthControl").value}px`;
+
+  selectedWidget.style.height =
+    `${document.querySelector("#heightControl").value}px`;
+
+  updateEditorLabels();
+  saveLayout();
+}
+
+function updateEditorPosition() {
+  if (!selectedWidget) return;
+
+  selectedWidget.style.left =
+    `${Math.max(0, Number(document.querySelector("#xControl").value) || 0)}px`;
+
+  selectedWidget.style.top =
+    `${Math.max(0, Number(document.querySelector("#yControl").value) || 0)}px`;
+
+  saveLayout();
+}
+
+function updateEditorRotation() {
+  if (!selectedWidget) return;
+
+  selectedWidget.style.setProperty(
+    "--widget-rotation",
+    `${document.querySelector("#rotationControl").value}deg`
+  );
+
+  updateEditorLabels();
+  saveLayout();
+}
+
+function updateEditorStyle() {
+  if (!selectedWidget) return;
+
+  const material = document.querySelector("#materialControl").value;
+  const color = document.querySelector("#colorControl").value;
+  const shadow = document.querySelector("#shadowControl").value;
+  const texture = document.querySelector("#textureControl").value;
+
+  selectedWidget.dataset.material = material;
+  selectedWidget.dataset.color = color;
+  selectedWidget.dataset.shadow = shadow;
+  selectedWidget.dataset.texture = texture;
+
+  saveLayout();
+}
+
+function setupResizeHandle(element, handle) {
+  let resizing = false;
+  let startX = 0;
+  let startY = 0;
+  let startWidth = 0;
+  let startHeight = 0;
+
+  handle.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    resizing = true;
+    bringToFront(element);
+
+    startX = event.clientX;
+    startY = event.clientY;
+    startWidth = element.offsetWidth;
+    startHeight = element.offsetHeight;
+
+    handle.setPointerCapture(event.pointerId);
+  });
+
+  handle.addEventListener("pointermove", event => {
+    if (!resizing) return;
+
+    const rotation =
+      (parseFloat(element.style.getPropertyValue("--widget-rotation")) || 0) *
+      Math.PI / 180;
+
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+
+    const localX = dx * Math.cos(rotation) + dy * Math.sin(rotation);
+    const localY = -dx * Math.sin(rotation) + dy * Math.cos(rotation);
+
+    element.style.width =
+      `${Math.max(170, startWidth + localX)}px`;
+
+    element.style.height =
+      `${Math.max(80, startHeight + localY)}px`;
+
+    if (selectedWidget === element) {
+      document.querySelector("#widthControl").value =
+        Math.round(element.offsetWidth);
+
+      document.querySelector("#heightControl").value =
+        Math.round(element.offsetHeight);
+
+      updateEditorLabels();
+    }
+  });
+
+  handle.addEventListener("pointerup", event => {
+    resizing = false;
+
+    if (handle.hasPointerCapture(event.pointerId)) {
+      handle.releasePointerCapture(event.pointerId);
+    }
+
+    saveLayout();
+  });
+
+  handle.addEventListener("pointercancel", () => {
+    resizing = false;
+  });
+}
+
 function makeDraggable(element) {
 
   const bar = element.querySelector(".window-bar");
@@ -327,33 +626,27 @@ function makeDraggable(element) {
 }
 
 function saveLayout() {
-
   const layout = {};
 
-  document
-    .querySelectorAll(".nova-window")
-    .forEach((element) => {
+  document.querySelectorAll(".nova-window").forEach(element => {
+    const widget = element.dataset.widget;
 
-      const widget = element.dataset.widget;
+    layout[widget] = {
+      left: element.style.left || "",
+      top: element.style.top || "",
+      width: element.style.width || "",
+      height: element.style.height || "",
+      zIndex: element.style.zIndex || "",
+      rotation: element.style.getPropertyValue("--widget-rotation") || "0deg",
+      material: element.dataset.material || "",
+      color: element.dataset.color || "",
+      shadow: element.dataset.shadow || "",
+      texture: element.dataset.texture || "",
+      hidden: element.classList.contains("hidden")
+    };
+  });
 
-      layout[widget] = {
-
-        left: element.style.left || "",
-        top: element.style.top || "",
-        zIndex: element.style.zIndex || "",
-
-        hidden:
-          element.classList.contains("hidden")
-
-      };
-
-    });
-
-  localStorage.setItem(
-    "novatab-layout",
-    JSON.stringify(layout)
-  );
-
+  localStorage.setItem("novatab-layout", JSON.stringify(layout));
 }
 
 
@@ -402,6 +695,22 @@ function loadLayout() {
           element.style.top =
             savedWindow.top;
         }
+        if (savedWindow.width)
+          element.style.width = savedWindow.width;
+
+        if (savedWindow.height)
+          element.style.height = savedWindow.height;
+
+        if (savedWindow.rotation)
+          element.style.setProperty(
+            "--widget-rotation",
+            savedWindow.rotation
+          );
+
+        element.dataset.material = savedWindow.material || "";
+        element.dataset.color = savedWindow.color || "";
+        element.dataset.shadow = savedWindow.shadow || "";
+        element.dataset.texture = savedWindow.texture || "";
 
         if (savedWindow.zIndex) {
           element.style.zIndex =
@@ -456,399 +765,182 @@ function setupCloseButtons() {
 }
 
 function getNotes() {
-
   try {
-
-    const saved =
-      localStorage.getItem("novatab-notes-list");
-
-    if (!saved) {
-      return [];
-    }
-
+    const saved = localStorage.getItem("novatab-notes-list");
+    if (!saved) return [];
     const notes = JSON.parse(saved);
-
-    return Array.isArray(notes)
-      ? notes
-      : [];
-
+    return Array.isArray(notes) ? notes : [];
   } catch {
-
     return [];
-
   }
-
 }
 
-
 function saveNotes(notes) {
-
-  localStorage.setItem(
-    "novatab-notes-list",
-    JSON.stringify(notes)
-  );
-
+  localStorage.setItem("novatab-notes-list", JSON.stringify(notes));
 }
 
 function createNewNoteData() {
-
   return {
-
-    id:
-      Date.now().toString() +
-      Math.random().toString(36).slice(2),
-
+    id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).slice(2),
     text: "",
-
-    createdAt:
-      new Date().toISOString(),
-
+    createdAt: new Date().toISOString(),
     peeledAt: null
-
   };
-
 }
 
 function setupNotes() {
+  document.querySelectorAll(".notes-window").forEach((windowElement) => {
+    if (windowElement.dataset.notesReady === "true") return;
 
-  document
-    .querySelectorAll(".notes-window")
-    .forEach((windowElement) => {
+    const textarea = windowElement.querySelector(".notes");
+    if (!textarea) return;
 
-      const textarea =
-        windowElement.querySelector(".notes");
-
-      if (!textarea) {
-        return;
-      }
-
-      setupStickyNoteBundle(
-        windowElement,
-        textarea
-      );
-
-    });
-
+    windowElement.dataset.notesReady = "true";
+    setupStickyNoteBundle(windowElement, textarea);
+  });
 }
 
-
-function setupStickyNoteBundle(
-  windowElement,
-  textarea
-) {
-
+function setupStickyNoteBundle(windowElement, textarea) {
   let notes = getNotes();
+  let active = notes.filter(note => !note.peeledAt);
 
-  let activeNotes =
-    notes.filter(
-      (note) => !note.peeledAt
-    );
-
-  if (activeNotes.length === 0) {
-
-    const newNote =
-      createNewNoteData();
-
-    notes.push(newNote);
-
+  if (!active.length) {
+    const note = createNewNoteData();
+    notes.push(note);
     saveNotes(notes);
-
-    activeNotes = [newNote];
-
+    active = [note];
   }
 
-  const currentNote =
-    activeNotes[activeNotes.length - 1];
+  let currentNoteId = active[active.length - 1].id;
+  textarea.value = active[active.length - 1].text || "";
 
-  textarea.value =
-    currentNote.text || "";
-
-  let peelCorner =
-    windowElement.querySelector(".note-peel-corner");
-
-  if (!peelCorner) {
-
-    peelCorner =
-      document.createElement("button");
-
-    peelCorner.className =
-      "note-peel-corner";
-
-    peelCorner.type = "button";
-
-    peelCorner.setAttribute(
-      "aria-label",
-      "Peel off note"
-    );
-
-    windowElement
-      .querySelector(".window-content")
-      .appendChild(peelCorner);
-
-  }
+  const peelCorner = windowElement.querySelector(".note-peel-corner");
 
   textarea.addEventListener("input", () => {
+    const notes = getNotes();
+    const note = notes.find(item => item.id === currentNoteId);
 
-    const allNotes = getNotes();
-
-    const note =
-      allNotes.find(
-        (item) =>
-          item.id === currentNote.id
-      );
-
-    if (!note) {
-      return;
-    }
+    if (!note) return;
 
     note.text = textarea.value;
-
-    saveNotes(allNotes);
-
+    saveNotes(notes);
   });
 
-  peelCorner.addEventListener(
-    "click",
-    () => {
+  peelCorner.addEventListener("click", () => {
+    peelNote(windowElement, currentNoteId);
+  });
 
-      peelNote(
-        windowElement,
-        currentNote.id
-      );
+  windowElement._setCurrentNote = (note) => {
+    currentNoteId = note.id;
+    textarea.value = note.text || "";
+  };
 
-    }
-  );
-
-  updateStickyStack(
-    windowElement
-  );
-
+  updateStickyStack(windowElement);
 }
 
 function updateStickyStack(windowElement) {
-
-  const notes =
-    getNotes().filter(
-      (note) => !note.peeledAt
-    );
-
-  const stackCount =
-    Math.min(notes.length, 4);
-
-  windowElement
-    .style.setProperty(
-      "--note-stack-count",
-      stackCount
-    );
-
+  const count = getNotes().filter(note => !note.peeledAt).length;
+  windowElement.style.setProperty("--note-stack-count", Math.min(count, 4));
 }
 
-function peelNote(
-  windowElement,
-  noteId
-) {
-
+function peelNote(windowElement, noteId) {
   const notes = getNotes();
+  const note = notes.find(item => item.id === noteId);
 
-  const note =
-    notes.find(
-      (item) => item.id === noteId
-    );
-
-  if (!note) {
-    return;
-  }
+  if (!note) return;
 
   if (!note.text.trim()) {
-
-    note.peeledAt =
-      new Date().toISOString();
-
+    note.peeledAt = new Date().toISOString();
     saveNotes(notes);
-
-    createNextStickyNote(
-      windowElement
-    );
-
+    createNextStickyNote(windowElement);
     return;
-
   }
 
-  windowElement.classList.add(
-    "peeling-note"
-  );
+  windowElement.classList.add("peeling-note");
 
   setTimeout(() => {
+    const latestNotes = getNotes();
+    const current = latestNotes.find(item => item.id === noteId);
 
-    note.peeledAt =
-      new Date().toISOString();
+    if (current) current.peeledAt = new Date().toISOString();
 
-    saveNotes(notes);
+    saveNotes(latestNotes);
+    windowElement.classList.remove("peeling-note");
 
-    windowElement.classList.remove(
-      "peeling-note"
-    );
-
-    createNextStickyNote(
-      windowElement
-    );
-
+    createNextStickyNote(windowElement);
     renderSavedNotes();
-
   }, 550);
-
 }
 
-function createNextStickyNote(
-  windowElement
-) {
-
+function createNextStickyNote(windowElement) {
   const notes = getNotes();
-
-  const newNote =
-    createNewNoteData();
+  const newNote = createNewNoteData();
 
   notes.push(newNote);
-
   saveNotes(notes);
 
-  const textarea =
-    windowElement.querySelector(".notes");
+  const textarea = windowElement.querySelector(".notes");
 
-  if (textarea) {
-
+  if (windowElement._setCurrentNote) {
+    windowElement._setCurrentNote(newNote);
+  } else if (textarea) {
     textarea.value = "";
-
-    textarea.focus();
-
   }
 
-  updateStickyStack(
-    windowElement
-  );
-
+  updateStickyStack(windowElement);
+  textarea?.focus();
 }
 
 function renderSavedNotes() {
-
-  const notes =
-    getNotes().filter(
-      (note) => note.peeledAt
-    );
+  const notes = getNotes().filter(note => note.peeledAt);
 
   savedNotesList.innerHTML = "";
 
-  if (notes.length === 0) {
-
-    emptyNotesMessage.classList.remove(
-      "hidden"
-    );
-
+  if (!notes.length) {
+    emptyNotesMessage.classList.remove("hidden");
     return;
-
   }
 
-  emptyNotesMessage.classList.add(
-    "hidden"
-  );
+  emptyNotesMessage.classList.add("hidden");
 
-  notes
-    .slice()
-    .reverse()
-    .forEach((note) => {
+  notes.slice().reverse().forEach(note => {
+    const article = document.createElement("article");
+    article.className = "saved-note";
+    article.dataset.noteId = note.id;
 
-      const article =
-        document.createElement("article");
+    const text = document.createElement("p");
+    text.textContent = note.text;
 
-      article.className =
-        "saved-note";
+    const date = document.createElement("small");
+    date.textContent = formatNoteDate(note.peeledAt);
 
-      article.dataset.noteId =
-        note.id;
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "delete-saved-note";
+    deleteButton.textContent = "Remove";
+    deleteButton.setAttribute("aria-label", "Remove this note");
 
-      const text =
-        document.createElement("p");
-
-      text.textContent =
-        note.text;
-
-      const date =
-        document.createElement("small");
-
-      date.textContent =
-        formatNoteDate(note.peeledAt);
-
-      const deleteButton =
-        document.createElement("button");
-
-      deleteButton.type = "button";
-
-      deleteButton.className =
-        "delete-saved-note";
-
-      deleteButton.textContent =
-        "Remove";
-
-      deleteButton.setAttribute(
-        "aria-label",
-        "Remove this note"
-      );
-
-      deleteButton.addEventListener(
-        "click",
-        () => {
-
-          deleteSavedNote(
-            note.id
-          );
-
-        }
-      );
-
-      article.appendChild(text);
-      article.appendChild(date);
-      article.appendChild(deleteButton);
-
-      savedNotesList.appendChild(
-        article
-      );
-
+    deleteButton.addEventListener("click", () => {
+      deleteSavedNote(note.id);
     });
 
+    article.append(text, date, deleteButton);
+    savedNotesList.appendChild(article);
+  });
 }
-
 
 function formatNoteDate(dateString) {
-
-  const date =
-    new Date(dateString);
-
-  return date.toLocaleDateString(
-    [],
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    }
-  );
-
+  return new Date(dateString).toLocaleDateString([], {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
 }
 
-
 function deleteSavedNote(noteId) {
-
-  const notes = getNotes();
-
-  const remaining =
-    notes.filter(
-      (note) =>
-        note.id !== noteId
-    );
-
-  saveNotes(remaining);
-
+  const notes = getNotes().filter(note => note.id !== noteId);
+  saveNotes(notes);
   renderSavedNotes();
-
 }
 
 function weatherCodeText(code) {
@@ -1412,6 +1504,7 @@ function createWidget(type) {
   bringToFront(newWidget);
 
   makeDraggable(newWidget);
+  decorateWidget(newWidget);
 
   setupCloseButtons();
 
@@ -1530,10 +1623,6 @@ resetBtn.addEventListener(
     );
 
     localStorage.removeItem(
-      "novatab-notes"
-    );
-
-    localStorage.removeItem(
       "novatab-notes-list"
     );
 
@@ -1544,13 +1633,14 @@ resetBtn.addEventListener(
 
 setupNavigation();
 
+setupWidgetEditor();
+
 document
   .querySelectorAll(".nova-window")
-  .forEach((element) => {
-
-    makeDraggable(element);
-
-  });
+  .forEach(element => {
+  makeDraggable(element);
+  decorateWidget(element);
+});
 
 setupCloseButtons();
 
