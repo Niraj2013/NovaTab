@@ -3,138 +3,53 @@ import "./style.css";
 const app = document.querySelector("#app");
 
 app.innerHTML = `
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <span class="sidebar-mark">N</span>
-      <span>NovaTab</span>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">N</span>
+      <div>
+        <h1>NovaTab</h1>
+        <p>Your space, your way</p>
+      </div>
     </div>
 
-    <nav class="sidebar-nav">
-      <button class="sidebar-item active" data-page="workspace">
-        <span>⌂</span>
-        <span>Workspace</span>
-      </button>
+    <div class="top-actions">
+      <button id="addWidgetBtn">+ Add widget</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+  </header>
 
-      <button class="sidebar-item" data-page="notes-page">
-        <span>✎</span>
-        <span>Notes</span>
-      </button>
-    </nav>
-  </aside>
+  <main id="workspace" class="workspace">
 
-  <div class="app-main">
+  <section class="nova-window welcome-window" data-widget="welcome">
+    <div class="window-bar">
+      <span class="window-title">Welcome</span>
+      <button class="close-widget" aria-label="Close welcome">×</button>
+    </div>
 
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark">N</span>
+    <div class="window-content">
+      <h2>Make this tab yours.</h2>
+      <p>
+        Drag things around, add widgets and create a workspace
+        that feels like you.
+      </p>
+    </div>
+  </section>
 
-        <div>
-          <h1>NovaTab</h1>
-          <p>Your space, your way</p>
-        </div>
-      </div>
+</main>
 
-      <div class="top-actions">
-        <button id="addWidgetBtn">+ Add widget</button>
-        <button id="resetBtn">Reset</button>
-      </div>
-    </header>
-
-    <!-- WORKSPACE PAGE -->
-    <main id="workspacePage" class="page active-page">
-
-      <section id="workspace" class="workspace">
-
-        <section class="nova-window welcome-window" data-widget="welcome">
-
-          <div class="window-bar">
-            <span class="window-title">Welcome</span>
-
-            <button
-              class="close-widget"
-              aria-label="Close welcome"
-            >
-              ×
-            </button>
-          </div>
-
-          <div class="window-content">
-            <h2>Make this tab yours.</h2>
-
-            <p>
-              Drag things around, add widgets and create a workspace
-              that feels like you.
-            </p>
-          </div>
-
-        </section>
-
-      </section>
-
-    </main>
-
-    <!-- NOTES PAGE -->
-    <main id="notes-page" class="page notes-page">
-
-      <div class="notes-page-inner">
-
-        <div class="notes-page-heading">
-          <h2>Notes</h2>
-          <p>Your peeled notes are kept here.</p>
-        </div>
-
-        <div id="savedNotesList" class="saved-notes-list"></div>
-
-        <div
-          id="emptyNotesMessage"
-          class="empty-notes-message"
-        >
-          No peeled notes yet.
-        </div>
-
-      </div>
-
-    </main>
-
-  </div>
-
-  <!-- WIDGET MENU -->
   <div id="widgetMenu" class="widget-menu hidden">
-
     <div class="widget-menu-card">
-
       <div class="menu-heading">
-
         <h2>Add something</h2>
-
-        <button id="closeMenu">
-          ×
-        </button>
-
+        <button id="closeMenu">×</button>
       </div>
 
-      <button class="widget-option" data-add="clock">
-        Clock
-      </button>
-
-      <button class="widget-option" data-add="weather">
-        Weather
-      </button>
-
-      <button class="widget-option" data-add="notes">
-        Notes
-      </button>
-
-      <button class="widget-option" data-add="welcome">
-        Welcome card
-      </button>
-
-      <button class="widget-option" data-add="apod">
-        NASA APOD
-      </button>
-
+      <button class="widget-option" data-add="clock">Clock</button>
+      <button class="widget-option" data-add="weather">Weather</button>
+      <button class="widget-option" data-add="notes">Notes</button>
+      <button class="widget-option" data-add="welcome">Welcome card</button>
+      <button class="widget-option" data-add="apod">NASA APOD</button>
     </div>
-
   </div>
 `;
 
@@ -144,54 +59,9 @@ const widgetMenu = document.querySelector("#widgetMenu");
 const closeMenu = document.querySelector("#closeMenu");
 const resetBtn = document.querySelector("#resetBtn");
 
-const workspacePage = document.querySelector("#workspacePage");
-const notesPage = document.querySelector("#notes-page");
-
-const savedNotesList = document.querySelector("#savedNotesList");
-const emptyNotesMessage = document.querySelector("#emptyNotesMessage");
-
 let highestZIndex = 10;
 
-function setupNavigation() {
-
-  document.querySelectorAll(".sidebar-item").forEach((button) => {
-
-    button.addEventListener("click", () => {
-
-      const page = button.dataset.page;
-
-      document
-        .querySelectorAll(".sidebar-item")
-        .forEach((item) => {
-          item.classList.remove("active");
-        });
-
-      button.classList.add("active");
-
-      if (page === "workspace") {
-
-        workspacePage.classList.add("active-page");
-        notesPage.classList.remove("active-page");
-
-      }
-
-      if (page === "notes-page") {
-
-        workspacePage.classList.remove("active-page");
-        notesPage.classList.add("active-page");
-
-        renderSavedNotes();
-
-      }
-
-    });
-
-  });
-
-}
-
 function updateClock() {
-
   const now = new Date();
 
   const time = now.toLocaleTimeString([], {
@@ -212,318 +82,14 @@ function updateClock() {
   document.querySelectorAll(".clock-date").forEach((element) => {
     element.textContent = date;
   });
-
 }
 
 function bringToFront(element) {
-
   highestZIndex += 1;
-
   element.style.zIndex = highestZIndex;
-
-}
-
-let selectedWidget = null;
-
-function setupWidgetEditor() {
-  if (document.querySelector("#widgetEditor")) return;
-
-  document.body.insertAdjacentHTML("beforeend", `
-    <aside id="widgetEditor" class="widget-editor hidden">
-      <div class="editor-head">
-        <h3>Edit widget</h3>
-        <button id="closeEditor">×</button>
-      </div>
-
-      <label>Width <output id="widthValue"></output></label>
-      <input id="widthControl" type="range" min="170" max="600" step="1">
-
-      <label>Height <output id="heightValue"></output></label>
-      <input id="heightControl" type="range" min="80" max="600" step="1">
-
-      <label>Rotation <output id="rotationValue"></output></label>
-      <input id="rotationControl" type="range" min="-15" max="15" step="0.5">
-
-      <div class="editor-row">
-        <label>X <input id="xControl" type="number"></label>
-        <label>Y <input id="yControl" type="number"></label>
-      </div>
-
-      <label>Material</label>
-      <select id="materialControl">
-        <option value="">Original</option>
-        <option value="paper">Paper</option>
-        <option value="kraft">Kraft</option>
-        <option value="card">Card</option>
-        <option value="gloss">Gloss</option>
-      </select>
-
-      <label>Colour</label>
-      <select id="colorControl">
-        <option value="">Original</option>
-        <option value="rose">Rose</option>
-        <option value="blue">Blue</option>
-        <option value="yellow">Yellow</option>
-        <option value="mint">Mint</option>
-        <option value="lavender">Lavender</option>
-      </select>
-
-      <label>Shadow</label>
-      <select id="shadowControl">
-        <option value="">Original</option>
-        <option value="soft">Soft</option>
-        <option value="deep">Deep</option>
-        <option value="flat">Flat</option>
-        <option value="none">None</option>
-      </select>
-
-      <label>Texture</label>
-      <select id="textureControl">
-        <option value="">None</option>
-        <option value="dots">Dots</option>
-        <option value="lines">Lines</option>
-        <option value="fibers">Fibers</option>
-      </select>
-
-      <div class="editor-layer">
-        <button id="sendBack">Send back</button>
-        <button id="bringFront">Bring front</button>
-      </div>
-    </aside>
-  `);
-
-  document.querySelector("#closeEditor").onclick = closeWidgetEditor;
-
-  const controls = [
-    ["widthControl", updateEditorSize],
-    ["heightControl", updateEditorSize],
-    ["rotationControl", updateEditorRotation],
-    ["xControl", updateEditorPosition],
-    ["yControl", updateEditorPosition],
-    ["materialControl", updateEditorStyle],
-    ["colorControl", updateEditorStyle],
-    ["shadowControl", updateEditorStyle],
-    ["textureControl", updateEditorStyle]
-  ];
-
-  controls.forEach(([id, fn]) => {
-    document.querySelector(`#${id}`).addEventListener("input", fn);
-    document.querySelector(`#${id}`).addEventListener("change", fn);
-  });
-
-  document.querySelector("#bringFront").onclick = () => {
-    if (!selectedWidget) return;
-    bringToFront(selectedWidget);
-    saveLayout();
-  };
-
-  document.querySelector("#sendBack").onclick = () => {
-    if (!selectedWidget) return;
-    selectedWidget.style.zIndex = "1";
-    saveLayout();
-  };
-
-  document.querySelectorAll(".nova-window").forEach(decorateWidget);
-}
-
-function decorateWidget(element) {
-  if (element.dataset.editorReady) return;
-
-  element.dataset.editorReady = "1";
-  element.tabIndex = 0;
-
-  const handle = document.createElement("div");
-  handle.className = "resize-handle";
-  element.appendChild(handle);
-
-  const texture = document.createElement("div");
-  texture.className = "editor-texture";
-  element.appendChild(texture);
-
-  element.addEventListener("dblclick", event => {
-    if (
-      event.target.closest("button") ||
-      event.target.closest("textarea") ||
-      event.target.closest("input") ||
-      event.target.closest("select")
-    ) return;
-
-    openWidgetEditor(element);
-  });
-
-  element.addEventListener("keydown", event => {
-    if (event.key === "Enter" && document.activeElement === element) {
-      openWidgetEditor(element);
-    }
-  });
-
-  setupResizeHandle(element, handle);
-}
-
-function openWidgetEditor(element) {
-  selectedWidget = element;
-  bringToFront(element);
-
-  const editor = document.querySelector("#widgetEditor");
-  editor.classList.remove("hidden");
-
-  const width = Math.round(element.getBoundingClientRect().width);
-  const height = Math.round(element.getBoundingClientRect().height);
-  const rotation = parseFloat(element.style.getPropertyValue("--widget-rotation")) || 0;
-
-  document.querySelector("#widthControl").value = width;
-  document.querySelector("#heightControl").value = height;
-  document.querySelector("#rotationControl").value = rotation;
-  document.querySelector("#xControl").value = parseInt(element.style.left) || 0;
-  document.querySelector("#yControl").value = parseInt(element.style.top) || 0;
-
-  document.querySelector("#materialControl").value = element.dataset.material || "";
-  document.querySelector("#colorControl").value = element.dataset.color || "";
-  document.querySelector("#shadowControl").value = element.dataset.shadow || "";
-  document.querySelector("#textureControl").value = element.dataset.texture || "";
-
-  updateEditorLabels();
-}
-
-function closeWidgetEditor() {
-  selectedWidget = null;
-  document.querySelector("#widgetEditor").classList.add("hidden");
-  document.querySelectorAll(".nova-window").forEach(el => el.classList.remove("editor-selected"));
-}
-
-function updateEditorLabels() {
-  document.querySelector("#widthValue").textContent =
-    `${document.querySelector("#widthControl").value}px`;
-
-  document.querySelector("#heightValue").textContent =
-    `${document.querySelector("#heightControl").value}px`;
-
-  document.querySelector("#rotationValue").textContent =
-    `${document.querySelector("#rotationControl").value}°`;
-}
-
-function updateEditorSize() {
-  if (!selectedWidget) return;
-
-  selectedWidget.style.width =
-    `${document.querySelector("#widthControl").value}px`;
-
-  selectedWidget.style.height =
-    `${document.querySelector("#heightControl").value}px`;
-
-  updateEditorLabels();
-  saveLayout();
-}
-
-function updateEditorPosition() {
-  if (!selectedWidget) return;
-
-  selectedWidget.style.left =
-    `${Math.max(0, Number(document.querySelector("#xControl").value) || 0)}px`;
-
-  selectedWidget.style.top =
-    `${Math.max(0, Number(document.querySelector("#yControl").value) || 0)}px`;
-
-  saveLayout();
-}
-
-function updateEditorRotation() {
-  if (!selectedWidget) return;
-
-  selectedWidget.style.setProperty(
-    "--widget-rotation",
-    `${document.querySelector("#rotationControl").value}deg`
-  );
-
-  updateEditorLabels();
-  saveLayout();
-}
-
-function updateEditorStyle() {
-  if (!selectedWidget) return;
-
-  const material = document.querySelector("#materialControl").value;
-  const color = document.querySelector("#colorControl").value;
-  const shadow = document.querySelector("#shadowControl").value;
-  const texture = document.querySelector("#textureControl").value;
-
-  selectedWidget.dataset.material = material;
-  selectedWidget.dataset.color = color;
-  selectedWidget.dataset.shadow = shadow;
-  selectedWidget.dataset.texture = texture;
-
-  saveLayout();
-}
-
-function setupResizeHandle(element, handle) {
-  let resizing = false;
-  let startX = 0;
-  let startY = 0;
-  let startWidth = 0;
-  let startHeight = 0;
-
-  handle.addEventListener("pointerdown", event => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    resizing = true;
-    bringToFront(element);
-
-    startX = event.clientX;
-    startY = event.clientY;
-    startWidth = element.offsetWidth;
-    startHeight = element.offsetHeight;
-
-    handle.setPointerCapture(event.pointerId);
-  });
-
-  handle.addEventListener("pointermove", event => {
-    if (!resizing) return;
-
-    const rotation =
-      (parseFloat(element.style.getPropertyValue("--widget-rotation")) || 0) *
-      Math.PI / 180;
-
-    const dx = event.clientX - startX;
-    const dy = event.clientY - startY;
-
-    const localX = dx * Math.cos(rotation) + dy * Math.sin(rotation);
-    const localY = -dx * Math.sin(rotation) + dy * Math.cos(rotation);
-
-    element.style.width =
-      `${Math.max(170, startWidth + localX)}px`;
-
-    element.style.height =
-      `${Math.max(80, startHeight + localY)}px`;
-
-    if (selectedWidget === element) {
-      document.querySelector("#widthControl").value =
-        Math.round(element.offsetWidth);
-
-      document.querySelector("#heightControl").value =
-        Math.round(element.offsetHeight);
-
-      updateEditorLabels();
-    }
-  });
-
-  handle.addEventListener("pointerup", event => {
-    resizing = false;
-
-    if (handle.hasPointerCapture(event.pointerId)) {
-      handle.releasePointerCapture(event.pointerId);
-    }
-
-    saveLayout();
-  });
-
-  handle.addEventListener("pointercancel", () => {
-    resizing = false;
-  });
 }
 
 function makeDraggable(element) {
-
   const bar = element.querySelector(".window-bar");
 
   if (!bar) {
@@ -535,7 +101,6 @@ function makeDraggable(element) {
   let offsetY = 0;
 
   bar.addEventListener("pointerdown", (event) => {
-
     if (event.target.closest("button")) {
       return;
     }
@@ -550,57 +115,29 @@ function makeDraggable(element) {
     offsetY = event.clientY - rect.top;
 
     bar.setPointerCapture(event.pointerId);
-
   });
 
   bar.addEventListener("pointermove", (event) => {
-
     if (!dragging) {
       return;
     }
 
-    const workspaceRect =
-      workspace.getBoundingClientRect();
+    const workspaceRect = workspace.getBoundingClientRect();
 
-    let left =
-      event.clientX -
-      workspaceRect.left -
-      offsetX;
+    let left = event.clientX - workspaceRect.left - offsetX;
+    let top = event.clientY - workspaceRect.top - offsetY;
 
-    let top =
-      event.clientY -
-      workspaceRect.top -
-      offsetY;
+    const maxLeft = Math.max(0, workspace.clientWidth - element.offsetWidth);
+    const maxTop = Math.max(0, workspace.clientHeight - element.offsetHeight);
 
-    const maxLeft = Math.max(
-      0,
-      workspace.clientWidth -
-      element.offsetWidth
-    );
-
-    const maxTop = Math.max(
-      0,
-      workspace.clientHeight -
-      element.offsetHeight
-    );
-
-    left = Math.max(
-      0,
-      Math.min(left, maxLeft)
-    );
-
-    top = Math.max(
-      0,
-      Math.min(top, maxTop)
-    );
+    left = Math.max(0, Math.min(left, maxLeft));
+    top = Math.max(0, Math.min(top, maxTop));
 
     element.style.left = `${left}px`;
     element.style.top = `${top}px`;
-
   });
 
   bar.addEventListener("pointerup", (event) => {
-
     dragging = false;
 
     if (bar.hasPointerCapture(event.pointerId)) {
@@ -608,78 +145,60 @@ function makeDraggable(element) {
     }
 
     saveLayout();
-
   });
 
   bar.addEventListener("pointercancel", () => {
-
     dragging = false;
-
   });
 
   element.addEventListener("pointerdown", () => {
-
     bringToFront(element);
-
   });
-
 }
 
 function saveLayout() {
   const layout = {};
 
-  document.querySelectorAll(".nova-window").forEach(element => {
+  document.querySelectorAll(".nova-window").forEach((element) => {
     const widget = element.dataset.widget;
 
     layout[widget] = {
       left: element.style.left || "",
       top: element.style.top || "",
-      width: element.style.width || "",
-      height: element.style.height || "",
       zIndex: element.style.zIndex || "",
-      rotation: element.style.getPropertyValue("--widget-rotation") || "0deg",
-      material: element.dataset.material || "",
-      color: element.dataset.color || "",
-      shadow: element.dataset.shadow || "",
-      texture: element.dataset.texture || "",
       hidden: element.classList.contains("hidden")
     };
   });
 
-  localStorage.setItem("novatab-layout", JSON.stringify(layout));
+  localStorage.setItem(
+    "novatab-layout",
+    JSON.stringify(layout)
+  );
 }
 
-
 function loadLayout() {
-
-  const saved =
-    localStorage.getItem("novatab-layout");
+  const saved = localStorage.getItem("novatab-layout");
 
   if (!saved) {
     return;
   }
 
   try {
-
     const layout = JSON.parse(saved);
 
     Object.entries(layout).forEach(
       ([widget, savedWindow]) => {
 
-        let element =
-          document.querySelector(
-            `.nova-window[data-widget="${widget}"]`
-          );
-
+        let element = document.querySelector(
+          `.nova-window[data-widget="${widget}"]`
+        );
+        
         if (!element && !savedWindow.hidden) {
-
           createWidget(widget);
 
-          element =
-            document.querySelector(
-              `.nova-window[data-widget="${widget}"]:last-child`
-            );
-
+          element = document.querySelector(
+            `.nova-window[data-widget="${widget}"]:last-child`
+          );
         }
 
         if (!element) {
@@ -695,22 +214,6 @@ function loadLayout() {
           element.style.top =
             savedWindow.top;
         }
-        if (savedWindow.width)
-          element.style.width = savedWindow.width;
-
-        if (savedWindow.height)
-          element.style.height = savedWindow.height;
-
-        if (savedWindow.rotation)
-          element.style.setProperty(
-            "--widget-rotation",
-            savedWindow.rotation
-          );
-
-        element.dataset.material = savedWindow.material || "";
-        element.dataset.color = savedWindow.color || "";
-        element.dataset.shadow = savedWindow.shadow || "";
-        element.dataset.texture = savedWindow.texture || "";
 
         if (savedWindow.zIndex) {
           element.style.zIndex =
@@ -722,497 +225,170 @@ function loadLayout() {
         } else {
           element.classList.remove("hidden");
         }
-
       }
     );
 
   } catch (error) {
-
     console.error(
       "Could not restore NovaTab layout:",
       error
     );
 
     localStorage.removeItem("novatab-layout");
-
   }
-
 }
 
 function setupCloseButtons() {
+  document.querySelectorAll(".close-widget").forEach((button) => {
+    button.onclick = () => {
+      const element = button.closest(".nova-window");
 
-  document
-    .querySelectorAll(".close-widget")
-    .forEach((button) => {
+      if (!element) {
+        return;
+      }
 
-      button.onclick = () => {
-
-        const element =
-          button.closest(".nova-window");
-
-        if (!element) {
-          return;
-        }
-
-        element.classList.add("hidden");
-
-        saveLayout();
-
-      };
-
-    });
-
-}
-
-function getNotes() {
-  try {
-    const saved = localStorage.getItem("novatab-notes-list");
-    if (!saved) return [];
-    const notes = JSON.parse(saved);
-    return Array.isArray(notes) ? notes : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveNotes(notes) {
-  localStorage.setItem("novatab-notes-list", JSON.stringify(notes));
-}
-
-function createNewNoteData() {
-  return {
-    id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).slice(2),
-    text: "",
-    createdAt: new Date().toISOString(),
-    peeledAt: null
-  };
+      element.classList.add("hidden");
+      saveLayout();
+    };
+  });
 }
 
 function setupNotes() {
-  document.querySelectorAll(".notes-window").forEach((windowElement) => {
-    if (windowElement.dataset.notesReady === "true") return;
+  document.querySelectorAll(".notes").forEach((textarea) => {
+    textarea.value = localStorage.getItem("novatab-notes") || "";
 
-    const textarea = windowElement.querySelector(".notes");
-    if (!textarea) return;
-
-    windowElement.dataset.notesReady = "true";
-    setupStickyNoteBundle(windowElement, textarea);
-  });
-}
-
-function setupStickyNoteBundle(windowElement, textarea) {
-  let notes = getNotes();
-  let active = notes.filter(note => !note.peeledAt);
-
-  if (!active.length) {
-    const note = createNewNoteData();
-    notes.push(note);
-    saveNotes(notes);
-    active = [note];
-  }
-
-  let currentNoteId = active[active.length - 1].id;
-  textarea.value = active[active.length - 1].text || "";
-
-  const peelCorner = windowElement.querySelector(".note-peel-corner");
-
-  textarea.addEventListener("input", () => {
-    const notes = getNotes();
-    const note = notes.find(item => item.id === currentNoteId);
-
-    if (!note) return;
-
-    note.text = textarea.value;
-    saveNotes(notes);
-  });
-
-  peelCorner.addEventListener("click", () => {
-    peelNote(windowElement, currentNoteId);
-  });
-
-  windowElement._setCurrentNote = (note) => {
-    currentNoteId = note.id;
-    textarea.value = note.text || "";
-  };
-
-  updateStickyStack(windowElement);
-}
-
-function updateStickyStack(windowElement) {
-  const count = getNotes().filter(note => !note.peeledAt).length;
-  windowElement.style.setProperty("--note-stack-count", Math.min(count, 4));
-}
-
-function peelNote(windowElement, noteId) {
-  const notes = getNotes();
-  const note = notes.find(item => item.id === noteId);
-
-  if (!note) return;
-
-  if (!note.text.trim()) {
-    note.peeledAt = new Date().toISOString();
-    saveNotes(notes);
-    createNextStickyNote(windowElement);
-    return;
-  }
-
-  windowElement.classList.add("peeling-note");
-
-  setTimeout(() => {
-    const latestNotes = getNotes();
-    const current = latestNotes.find(item => item.id === noteId);
-
-    if (current) current.peeledAt = new Date().toISOString();
-
-    saveNotes(latestNotes);
-    windowElement.classList.remove("peeling-note");
-
-    createNextStickyNote(windowElement);
-    renderSavedNotes();
-  }, 550);
-}
-
-function createNextStickyNote(windowElement) {
-  const notes = getNotes();
-  const newNote = createNewNoteData();
-
-  notes.push(newNote);
-  saveNotes(notes);
-
-  const textarea = windowElement.querySelector(".notes");
-
-  if (windowElement._setCurrentNote) {
-    windowElement._setCurrentNote(newNote);
-  } else if (textarea) {
-    textarea.value = "";
-  }
-
-  updateStickyStack(windowElement);
-  textarea?.focus();
-}
-
-function renderSavedNotes() {
-  const notes = getNotes().filter(note => note.peeledAt);
-
-  savedNotesList.innerHTML = "";
-
-  if (!notes.length) {
-    emptyNotesMessage.classList.remove("hidden");
-    return;
-  }
-
-  emptyNotesMessage.classList.add("hidden");
-
-  notes.slice().reverse().forEach(note => {
-    const article = document.createElement("article");
-    article.className = "saved-note";
-    article.dataset.noteId = note.id;
-
-    const text = document.createElement("p");
-    text.textContent = note.text;
-
-    const date = document.createElement("small");
-    date.textContent = formatNoteDate(note.peeledAt);
-
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "delete-saved-note";
-    deleteButton.textContent = "Remove";
-    deleteButton.setAttribute("aria-label", "Remove this note");
-
-    deleteButton.addEventListener("click", () => {
-      deleteSavedNote(note.id);
+    textarea.addEventListener("input", () => {
+      localStorage.setItem("novatab-notes", textarea.value);
     });
-
-    article.append(text, date, deleteButton);
-    savedNotesList.appendChild(article);
   });
-}
-
-function formatNoteDate(dateString) {
-  return new Date(dateString).toLocaleDateString([], {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
-}
-
-function deleteSavedNote(noteId) {
-  const notes = getNotes().filter(note => note.id !== noteId);
-  saveNotes(notes);
-  renderSavedNotes();
 }
 
 function weatherCodeText(code) {
-
   if (code === 0) return "Clear sky";
-
-  if (code === 1 || code === 2)
-    return "Partly cloudy";
-
-  if (code === 3)
-    return "Cloudy";
-
-  if (code === 45 || code === 48)
-    return "Foggy";
-
-  if (code >= 51 && code <= 57)
-    return "Drizzle";
-
-  if (code >= 61 && code <= 67)
-    return "Rain";
-
-  if (code >= 71 && code <= 77)
-    return "Snow";
-
-  if (code >= 80 && code <= 82)
-    return "Rain showers";
-
-  if (code >= 85 && code <= 86)
-    return "Snow showers";
-
-  if (code >= 95 && code <= 99)
-    return "Thunderstorm";
+  if (code === 1 || code === 2) return "Partly cloudy";
+  if (code === 3) return "Cloudy";
+  if (code === 45 || code === 48) return "Foggy";
+  if (code >= 51 && code <= 57) return "Drizzle";
+  if (code >= 61 && code <= 67) return "Rain";
+  if (code >= 71 && code <= 77) return "Snow";
+  if (code >= 80 && code <= 82) return "Rain showers";
+  if (code >= 85 && code <= 86) return "Snow showers";
+  if (code >= 95 && code <= 99) return "Thunderstorm";
 
   return "Unknown conditions";
-
 }
 
-
 function setupWeather() {
+  document.querySelectorAll(".weather-form").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-  document
-    .querySelectorAll(".weather-form")
-    .forEach((form) => {
+      const windowElement = form.closest(".nova-window");
+      const cityInput = form.querySelector(".city-input");
+      const status = windowElement.querySelector(".weather-status");
+      const result = windowElement.querySelector(".weather-result");
 
-      form.addEventListener(
-        "submit",
-        async (event) => {
+      const city = cityInput.value.trim();
 
-          event.preventDefault();
+      if (!city) {
+        status.textContent = "Please enter a city.";
+        return;
+      }
 
-          const windowElement =
-            form.closest(".nova-window");
+      status.textContent = "Looking up the weather...";
+      result.innerHTML = "";
 
-          const cityInput =
-            form.querySelector(
-              ".city-input"
-            );
+      try {
+        const locationResponse = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+        );
 
-          const status =
-            windowElement.querySelector(
-              ".weather-status"
-            );
-
-          const result =
-            windowElement.querySelector(
-              ".weather-result"
-            );
-
-          const city =
-            cityInput.value.trim();
-
-          if (!city) {
-
-            status.textContent =
-              "Please enter a city.";
-
-            return;
-
-          }
-
-          status.textContent =
-            "Looking up the weather...";
-
-          result.innerHTML = "";
-
-          try {
-
-            const locationResponse =
-              await fetch(
-                `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
-              );
-
-            if (!locationResponse.ok) {
-
-              throw new Error(
-                "Could not find that city."
-              );
-
-            }
-
-            const locationData =
-              await locationResponse.json();
-
-            if (
-              !locationData.results ||
-              locationData.results.length === 0
-            ) {
-
-              throw new Error(
-                "City not found."
-              );
-
-            }
-
-            const location =
-              locationData.results[0];
-
-            const weatherResponse =
-              await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
-              );
-
-            if (!weatherResponse.ok) {
-
-              throw new Error(
-                "Weather service is unavailable."
-              );
-
-            }
-
-            const weatherData =
-              await weatherResponse.json();
-
-            const current =
-              weatherData.current;
-
-            status.textContent =
-              `${location.name}, ${location.country}`;
-
-            result.innerHTML = `
-              <div class="weather-main">
-                <strong>
-                  ${Math.round(current.temperature_2m)}°C
-                </strong>
-
-                <span>
-                  ${weatherCodeText(current.weather_code)}
-                </span>
-              </div>
-
-              <p>
-                Humidity:
-                ${current.relative_humidity_2m}%
-              </p>
-
-              <p>
-                Wind:
-                ${Math.round(current.wind_speed_10m)}
-                km/h
-              </p>
-            `;
-
-          } catch (error) {
-
-            status.textContent =
-              error.message;
-
-          }
-
+        if (!locationResponse.ok) {
+          throw new Error("Could not find that city.");
         }
-      );
 
+        const locationData = await locationResponse.json();
+
+        if (!locationData.results || locationData.results.length === 0) {
+          throw new Error("City not found.");
+        }
+
+        const location = locationData.results[0];
+
+        const weatherResponse = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+        );
+
+        if (!weatherResponse.ok) {
+          throw new Error("Weather service is unavailable.");
+        }
+
+        const weatherData = await weatherResponse.json();
+        const current = weatherData.current;
+
+        status.textContent = `${location.name}, ${location.country}`;
+
+        result.innerHTML = `
+          <div class="weather-main">
+            <strong>${Math.round(current.temperature_2m)}°C</strong>
+            <span>${weatherCodeText(current.weather_code)}</span>
+          </div>
+          <p>Humidity: ${current.relative_humidity_2m}%</p>
+          <p>Wind: ${Math.round(current.wind_speed_10m)} km/h</p>
+        `;
+      } catch (error) {
+        status.textContent = error.message;
+      }
     });
-
+  });
 }
 
 async function setupApod(windowElement) {
-
-  const status =
-    windowElement.querySelector(
-      ".apod-status"
-    );
-
-  const content =
-    windowElement.querySelector(
-      ".apod-content"
-    );
-
-  const image =
-    windowElement.querySelector(
-      ".apod-image"
-    );
-
-  const title =
-    windowElement.querySelector(
-      ".apod-title"
-    );
-
-  const date =
-    windowElement.querySelector(
-      ".apod-date"
-    );
-
-  const explanation =
-    windowElement.querySelector(
-      ".apod-explanation"
-    );
+  const status = windowElement.querySelector(".apod-status");
+  const content = windowElement.querySelector(".apod-content");
+  const image = windowElement.querySelector(".apod-image");
+  const title = windowElement.querySelector(".apod-title");
+  const date = windowElement.querySelector(".apod-date");
+  const explanation = windowElement.querySelector(".apod-explanation");
 
   if (!status || !content) {
     return;
   }
 
-  const apiKey =
-    import.meta.env.VITE_NASA_API_KEY;
+  const apiKey = import.meta.env.VITE_NASA_API_KEY;
 
   if (!apiKey) {
-
-    status.textContent =
-      "NASA API key is missing.";
-
+    status.textContent = "NASA API key is missing.";
     return;
-
   }
 
   try {
-
-    const response =
-      await fetch(
-        `https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(apiKey)}`
-      );
+    const response = await fetch(
+      `https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(apiKey)}`
+    );
 
     if (!response.ok) {
-
-      throw new Error(
-        "Could not load NASA APOD."
-      );
-
+      throw new Error("Could not load NASA APOD.");
     }
 
-    const data =
-      await response.json();
+    const data = await response.json();
 
     if (data.media_type === "image") {
-
-      image.src =
-        data.url;
-
-      image.alt =
-        data.title ||
-        "NASA Astronomy Picture of the Day";
+      image.src = data.url;
+      image.alt = data.title || "NASA Astronomy Picture of the Day";
 
       title.textContent =
-        data.title ||
-        "Astronomy Picture of the Day";
+        data.title || "Astronomy Picture of the Day";
 
-      date.textContent =
-        data.date || "";
+      date.textContent = data.date || "";
 
       explanation.textContent =
         data.explanation || "";
 
-      status.classList.add(
-        "hidden"
-      );
+      status.classList.add("hidden");
+      content.classList.remove("hidden");
 
-      content.classList.remove(
-        "hidden"
-      );
-
-    } else if (
-      data.media_type === "video"
-    ) {
+    } else if (data.media_type === "video") {
 
       content.innerHTML = `
         <iframe
@@ -1235,99 +411,48 @@ async function setupApod(windowElement) {
         </p>
       `;
 
-      status.classList.add(
-        "hidden"
-      );
-
-      content.classList.remove(
-        "hidden"
-      );
+      status.classList.add("hidden");
+      content.classList.remove("hidden");
 
     } else {
-
       status.textContent =
         "NASA APOD is unavailable.";
-
     }
 
   } catch (error) {
-
-    status.textContent =
-      error.message;
-
+    status.textContent = error.message;
   }
-
 }
 
 function createWidget(type) {
-
   const templates = {
-
     clock: `
-      <section
-        class="nova-window clock-window"
-        data-widget="clock"
-      >
-
+      <section class="nova-window clock-window" data-widget="clock">
         <div class="window-bar">
-
-          <span class="window-title">
-            Clock
-          </span>
-
-          <button
-            class="close-widget"
-            aria-label="Close clock"
-          >
-            ×
-          </button>
-
+          <span class="window-title">Clock</span>
+          <button class="close-widget" aria-label="Close clock">×</button>
         </div>
 
         <div class="window-content">
-
-          <div class="clock-time">
-            00:00
-          </div>
-
-          <div class="clock-date">
-            Loading date...
-          </div>
-
+          <div class="clock-time">00:00</div>
+          <div class="clock-date">Loading date...</div>
         </div>
-
       </section>
     `,
 
     weather: `
-      <section
-        class="nova-window weather-window"
-        data-widget="weather"
-      >
-
+      <section class="nova-window weather-window" data-widget="weather">
         <div class="window-bar">
-
-          <span class="window-title">
-            Weather
-          </span>
-
-          <button
-            class="close-widget"
-            aria-label="Close weather"
-          >
-            ×
-          </button>
-
+          <span class="window-title">Weather</span>
+          <button class="close-widget" aria-label="Close weather">×</button>
         </div>
 
         <div class="window-content">
-
           <p class="weather-status">
             Enter a city to check the weather.
           </p>
 
           <form class="weather-form">
-
             <input
               class="city-input"
               type="text"
@@ -1335,128 +460,60 @@ function createWidget(type) {
               autocomplete="off"
             />
 
-            <button type="submit">
-              Check
-            </button>
-
+            <button type="submit">Check</button>
           </form>
 
           <div class="weather-result"></div>
-
         </div>
-
       </section>
     `,
 
     notes: `
-      <section
-        class="nova-window notes-window"
-        data-widget="notes"
-      >
-
+      <section class="nova-window notes-window" data-widget="notes">
         <div class="window-bar">
-
-          <span class="window-title">
-            Little Notes
-          </span>
-
-          <button
-            class="close-widget"
-            aria-label="Close notes"
-          >
-            ×
-          </button>
-
+          <span class="window-title">Little Notes</span>
+          <button class="close-widget" aria-label="Close notes">×</button>
         </div>
 
         <div class="window-content">
-
-          <div class="note-stack">
-
-            <textarea
-              class="notes"
-              placeholder="Write something here..."
-            ></textarea>
-
-            <button
-              class="note-peel-corner"
-              type="button"
-              aria-label="Peel off note"
-            ></button>
-
-          </div>
-
+          <textarea
+            class="notes"
+            placeholder="Write something here..."
+          ></textarea>
         </div>
-
       </section>
     `,
 
     welcome: `
-      <section
-        class="nova-window welcome-window"
-        data-widget="welcome"
-      >
-
+      <section class="nova-window welcome-window" data-widget="welcome">
         <div class="window-bar">
-
-          <span class="window-title">
-            Welcome
-          </span>
-
-          <button
-            class="close-widget"
-            aria-label="Close welcome"
-          >
-            ×
-          </button>
-
+          <span class="window-title">Welcome</span>
+          <button class="close-widget" aria-label="Close welcome">×</button>
         </div>
 
         <div class="window-content">
-
-          <h2>
-            Make this tab yours.
-          </h2>
-
+          <h2>Make this tab yours.</h2>
           <p>
             Drag things around, add widgets and create a workspace
             that feels like you.
           </p>
-
         </div>
-
       </section>
     `,
 
     apod: `
-      <section
-        class="nova-window apod-window"
-        data-widget="apod"
-      >
-
+      <section class="nova-window apod-window" data-widget="apod">
         <div class="window-bar">
-
-          <span class="window-title">
-            NASA APOD
-          </span>
-
-          <button
-            class="close-widget"
-            aria-label="Close NASA APOD"
-          >
-            ×
-          </button>
-
+          <span class="window-title">NASA APOD</span>
+          <button class="close-widget" aria-label="Close NASA APOD">×</button>
         </div>
 
         <div class="window-content">
-
           <p class="apod-status">
             Loading NASA's Astronomy Picture of the Day...
           </p>
 
           <div class="apod-content hidden">
-
             <img
               class="apod-image"
               alt="NASA Astronomy Picture of the Day"
@@ -1467,14 +524,10 @@ function createWidget(type) {
             <p class="apod-date"></p>
 
             <p class="apod-explanation"></p>
-
           </div>
-
         </div>
-
       </section>
     `
-
   };
 
   if (!templates[type]) {
@@ -1504,157 +557,79 @@ function createWidget(type) {
   bringToFront(newWidget);
 
   makeDraggable(newWidget);
-  decorateWidget(newWidget);
 
   setupCloseButtons();
-
-  if (type === "notes") {
-    setupNotes();
-  }
-
-  if (type === "weather") {
-    setupWeather();
-  }
+  setupNotes();
+  setupWeather();
 
   if (type === "apod") {
     setupApod(newWidget);
   }
 
-  updateClock();
-
   saveLayout();
-
 }
 
-addWidgetBtn.addEventListener(
-  "click",
-  () => {
+addWidgetBtn.addEventListener("click", () => {
+  widgetMenu.classList.remove("hidden");
+});
 
-    widgetMenu.classList.remove(
-      "hidden"
-    );
+closeMenu.addEventListener("click", () => {
+  widgetMenu.classList.add("hidden");
+});
 
+widgetMenu.addEventListener("click", (event) => {
+  const button = event.target.closest(".widget-option");
+
+  if (!button) {
+    return;
   }
-);
 
+  const widgetType = button.dataset.add;
 
-closeMenu.addEventListener(
-  "click",
-  () => {
+  const existing = document.querySelector(
+    `.nova-window[data-widget="${widgetType}"]`
+  );
 
-    widgetMenu.classList.add(
-      "hidden"
-    );
+  if (existing) {
+    existing.classList.remove("hidden");
 
+    bringToFront(existing);
+
+    widgetMenu.classList.add("hidden");
+
+    saveLayout();
+
+    return;
   }
-);
 
+  createWidget(widgetType);
 
-widgetMenu.addEventListener(
-  "click",
-  (event) => {
+  widgetMenu.classList.add("hidden");
+});
 
-    const button =
-      event.target.closest(
-        ".widget-option"
-      );
-
-    if (!button) {
-      return;
-    }
-
-    const widgetType =
-      button.dataset.add;
-
-    const existing =
-      document.querySelector(
-        `.nova-window[data-widget="${widgetType}"]`
-      );
-
-    if (existing) {
-
-      existing.classList.remove(
-        "hidden"
-      );
-
-      bringToFront(existing);
-
-      widgetMenu.classList.add(
-        "hidden"
-      );
-
-      saveLayout();
-
-      return;
-
-    }
-
-    createWidget(widgetType);
-
-    widgetMenu.classList.add(
-      "hidden"
-    );
-
+widgetMenu.addEventListener("pointerdown", (event) => {
+  if (event.target === widgetMenu) {
+    widgetMenu.classList.add("hidden");
   }
-);
+});
 
+resetBtn.addEventListener("click", () => {
+  localStorage.removeItem("novatab-layout");
+  localStorage.removeItem("novatab-notes");
+  localStorage.removeItem("novatab-notes-list");
 
-widgetMenu.addEventListener(
-  "pointerdown",
-  (event) => {
+  location.reload();
+});
 
-    if (event.target === widgetMenu) {
-
-      widgetMenu.classList.add(
-        "hidden"
-      );
-
-    }
-
-  }
-);
-
-resetBtn.addEventListener(
-  "click",
-  () => {
-
-    localStorage.removeItem(
-      "novatab-layout"
-    );
-
-    localStorage.removeItem(
-      "novatab-notes-list"
-    );
-
-    location.reload();
-
-  }
-);
-
-setupNavigation();
-
-setupWidgetEditor();
-
-document
-  .querySelectorAll(".nova-window")
-  .forEach(element => {
+document.querySelectorAll(".nova-window").forEach((element) => {
   makeDraggable(element);
-  decorateWidget(element);
 });
 
 setupCloseButtons();
-
 setupNotes();
-
 setupWeather();
 
-setInterval(
-  updateClock,
-  1000
-);
+setInterval(updateClock, 1000);
 
 loadLayout();
-
 updateClock();
-
-renderSavedNotes();
