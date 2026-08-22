@@ -2,20 +2,20 @@
 
 NovaTab is a highly interactive, responsive browser "New Tab" page replacement built for the Hack Club Stardance community. It provides users with a fully customizable dashboard featuring toggleable, editable, and draggable widgets alongside custom styling settings.
 
-## 🚀 Key Features
+##  Key Features
 
 - **Draggable Widget Grid:** Complete user freedom to move, drag, and drop custom dashboard elements anywhere on the canvas screen.
 - **In-Line Content Editing:** Users can double-click on any active widget to edit or alter its content values in real-time.
 - **Persistent Local Engine:** Custom stylesheets, widget placements, layouts, and data points save locally and persist across browser reloads using the browser's `localStorage` API.
 - **NASA API Integration:** Features structured API network handling to fetch and parse data feeds seamlessly from the public NASA APOD (Astronomy Picture of the Day) channel.
 
-## 🛠️ Technical Stack
+##  Technical Stack
 
 - **Markup Language:** Semantics-focused HTML5 skeleton structure.
 - **Styling Layout Engine:** CSS3 utilizing flexbox layouts, absolute drag layers, root color themes, and custom animations.
 - **Logic Controller:** Native Vanilla JavaScript (ES6+) for DOM manipulation, local data storage state control, drag event mapping, and fetch streams.
 
-## 💻 Local Setup & Execution Instructions
+##  Local Setup & Execution Instructions
 
 Because NovaTab is built as a pure client-side web application without complex compilation tools, setting up the local working layout is quick and straightforward:
 
