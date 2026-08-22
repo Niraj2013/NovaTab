@@ -17,7 +17,6 @@ app.innerHTML = `
       <button id="resetBtn">Reset</button>
     </div>
   </header>
-
   <main id="workspace" class="workspace">
 
   <section class="nova-window welcome-window" data-widget="welcome">
@@ -34,7 +33,6 @@ app.innerHTML = `
       </p>
     </div>
   </section>
-
 </main>
 
   <div id="widgetMenu" class="widget-menu hidden">
@@ -58,7 +56,6 @@ const addWidgetBtn = document.querySelector("#addWidgetBtn");
 const widgetMenu = document.querySelector("#widgetMenu");
 const closeMenu = document.querySelector("#closeMenu");
 const resetBtn = document.querySelector("#resetBtn");
-
 let highestZIndex = 10;
 
 function updateClock() {
@@ -68,7 +65,6 @@ function updateClock() {
     hour: "2-digit",
     minute: "2-digit"
   });
-
   const date = now.toLocaleDateString([], {
     weekday: "long",
     month: "long",
@@ -78,7 +74,6 @@ function updateClock() {
   document.querySelectorAll(".clock-time").forEach((element) => {
     element.textContent = time;
   });
-
   document.querySelectorAll(".clock-date").forEach((element) => {
     element.textContent = date;
   });
@@ -123,10 +118,8 @@ function makeDraggable(element) {
     }
 
     const workspaceRect = workspace.getBoundingClientRect();
-
     let left = event.clientX - workspaceRect.left - offsetX;
     let top = event.clientY - workspaceRect.top - offsetY;
-
     const maxLeft = Math.max(0, workspace.clientWidth - element.offsetWidth);
     const maxTop = Math.max(0, workspace.clientHeight - element.offsetHeight);
 
@@ -150,7 +143,6 @@ function makeDraggable(element) {
   bar.addEventListener("pointercancel", () => {
     dragging = false;
   });
-
   element.addEventListener("pointerdown", () => {
     bringToFront(element);
   });
@@ -200,21 +192,17 @@ function loadLayout() {
             `.nova-window[data-widget="${widget}"]:last-child`
           );
         }
-
         if (!element) {
           return;
         }
-
         if (savedWindow.left) {
           element.style.left =
             savedWindow.left;
         }
-
         if (savedWindow.top) {
           element.style.top =
             savedWindow.top;
         }
-
         if (savedWindow.zIndex) {
           element.style.zIndex =
             savedWindow.zIndex;
@@ -256,7 +244,6 @@ function setupCloseButtons() {
 function setupNotes() {
   document.querySelectorAll(".notes").forEach((textarea) => {
     textarea.value = localStorage.getItem("novatab-notes") || "";
-
     textarea.addEventListener("input", () => {
       localStorage.setItem("novatab-notes", textarea.value);
     });
@@ -282,12 +269,10 @@ function setupWeather() {
   document.querySelectorAll(".weather-form").forEach((form) => {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-
       const windowElement = form.closest(".nova-window");
       const cityInput = form.querySelector(".city-input");
       const status = windowElement.querySelector(".weather-status");
       const result = windowElement.querySelector(".weather-result");
-
       const city = cityInput.value.trim();
 
       if (!city) {
@@ -361,7 +346,6 @@ async function setupApod(windowElement) {
     status.textContent = "NASA API key is missing.";
     return;
   }
-
   try {
     const response = await fetch(
       `https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(apiKey)}`
@@ -423,7 +407,6 @@ async function setupApod(windowElement) {
     status.textContent = error.message;
   }
 }
-
 function createWidget(type) {
   const templates = {
     clock: `
@@ -518,7 +501,6 @@ function createWidget(type) {
               class="apod-image"
               alt="NASA Astronomy Picture of the Day"
             />
-
             <h3 class="apod-title"></h3>
 
             <p class="apod-date"></p>
@@ -555,7 +537,6 @@ function createWidget(type) {
     `${100 + Math.random() * 150}px`;
 
   bringToFront(newWidget);
-
   makeDraggable(newWidget);
 
   setupCloseButtons();
@@ -565,7 +546,6 @@ function createWidget(type) {
   if (type === "apod") {
     setupApod(newWidget);
   }
-
   saveLayout();
 }
 
@@ -585,25 +565,19 @@ widgetMenu.addEventListener("click", (event) => {
   }
 
   const widgetType = button.dataset.add;
-
   const existing = document.querySelector(
     `.nova-window[data-widget="${widgetType}"]`
   );
 
   if (existing) {
     existing.classList.remove("hidden");
-
     bringToFront(existing);
-
     widgetMenu.classList.add("hidden");
-
     saveLayout();
-
     return;
   }
 
   createWidget(widgetType);
-
   widgetMenu.classList.add("hidden");
 });
 
@@ -620,7 +594,6 @@ resetBtn.addEventListener("click", () => {
 
   location.reload();
 });
-
 document.querySelectorAll(".nova-window").forEach((element) => {
   makeDraggable(element);
 });
@@ -630,6 +603,5 @@ setupNotes();
 setupWeather();
 
 setInterval(updateClock, 1000);
-
 loadLayout();
 updateClock();
