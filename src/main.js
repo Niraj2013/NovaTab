@@ -56,6 +56,26 @@ const addWidgetBtn = document.querySelector("#addWidgetBtn");
 const widgetMenu = document.querySelector("#widgetMenu");
 const closeMenu = document.querySelector("#closeMenu");
 const resetBtn = document.querySelector("#resetBtn");
+const stickers = [];
+function setupStickerStamp(){
+  workspace.addEventListener("click", (event) =>{
+    if(
+      event.target.closest(".nova-window") ||
+      event.target.closest(".widget-menu")
+    ){
+      return;
+    }
+    const rect = workspace.getBoundingClientRect();
+    const sticker = document.createElement("span");
+
+    sticker.className = "workspace-sticker";
+    sticker.textContent = "★";
+    sticker.style.left =`${event.clientX - rect.left}px`;
+    sticker.style.top = `${event.clientY- rect.top}px`;
+    sticker.style.transform=`translate(-50%, -50%) rotate(${Math.random()*20-10}deg)`;
+    workspace.appendChild(sticker);
+  });
+}
 let highestZIndex = 10;
 
 function updateClock() {
@@ -285,8 +305,8 @@ function setupWeather() {
 
       try {
         const locationResponse = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
-        );
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+      );
 
         if (!locationResponse.ok) {
           throw new Error("Could not find that city.");
@@ -348,8 +368,8 @@ async function setupApod(windowElement) {
   }
   try {
     const response = await fetch(
-      `https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(apiKey)}`
-    );
+  `https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(apiKey)}`
+);
 
     if (!response.ok) {
       throw new Error("Could not load NASA APOD.");
